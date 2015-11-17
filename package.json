@@ -5,6 +5,8 @@
   "main": "duokan-helper.js",
   "dependencies": {},
   "devDependencies": {
+    "babel-core": "^6.1.21",
+    "babel-loader": "^6.1.0",
     "webpack": "^1.12.6"
   },
   "scripts": {

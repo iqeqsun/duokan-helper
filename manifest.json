@@ -7,7 +7,7 @@
 
   "content_scripts": [{
     "matches": ["http://www.duokan.com/*"],
-    "js": ["duokan-helper.min.js"],
+    "js": ["duokan-helper.js"],
     "run_ad": "document_end"
   }],
 
