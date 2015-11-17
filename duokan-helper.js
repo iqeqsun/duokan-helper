@@ -49,7 +49,6 @@
 	__webpack_require__(1);
 
 	console.log('duokan-helper loaded.');
-	console.log('and ' + _);
 
 /***/ },
 /* 1 */

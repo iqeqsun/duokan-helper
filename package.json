@@ -4,7 +4,8 @@
   "description": "",
   "main": "duokan-helper.js",
   "dependencies": {
-    "lodash": "^3.10.1"
+    "lodash": "^3.10.1",
+    "qwest": "^2.2.3"
   },
   "devDependencies": {
     "babel-core": "^6.1.21",
