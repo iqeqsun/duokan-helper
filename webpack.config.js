@@ -4,10 +4,10 @@ module.exports = {
     path: __dirname,
     filename: 'duokan-helper.js'
   },
-  modules: {
+  module: {
     loaders: [{
       test: /\.es$/,
-      loader: 'babel-loader'
+      loader: 'babel-loader?presets[]=es2015'
     }]
   }
 }
