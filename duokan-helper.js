@@ -56,8 +56,35 @@
 
 	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
+	var API = 'http://127.0.0.1:8080';
+
 	console.log('duokan-helper loaded.');
-	console.log(qwest);
+
+	var pathname = _.rest(new URL(document.URL).pathname.split('/'));
+
+	function isStrNumber(v) {
+	  return (/^\d+$/.test(v)
+	  );
+	}
+
+	if (_.first(pathname) === 'book') {
+	  var id = pathname[1];
+	  if (isStrNumber(id)) {
+	    qwest.get(API + '/book/' + id).then(function (xhr, data) {
+	      _.each(data, function (timeline) {
+	        timeline.Price = Number(timeline.Price);
+	      });
+	      var min = _.reduce(data, function (min, timeline) {
+	        return min.Price > timeline.Price ? timeline : min;
+	      }).Price;
+	      var i = document.createElement('i');
+	      i.textContent = '历史最低价¥ ' + min;
+	      document.querySelector('.price').appendChild(i);
+	    }).catch(function (e) {
+	      console.error(e);
+	    });
+	  }
+	}
 
 /***/ },
 /* 1 */
