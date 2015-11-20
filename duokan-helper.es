@@ -2,6 +2,7 @@
 
 import _ from 'lodash'
 import qwest from 'qwest'
+import react from 'react'
 
 const API = 'http://127.0.0.1:8080'
 const KEY = Symbol('duokan-helper')
