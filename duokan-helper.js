@@ -58,33 +58,62 @@
 
 	var API = 'http://127.0.0.1:8080';
 
-	console.log('duokan-helper loaded.');
+	function Pathname2Array(s) {
+	  return _.rest(s.split('/'));
+	}
 
-	var pathname = _.rest(new URL(document.URL).pathname.split('/'));
-
-	function isStrNumber(v) {
+	function StrIsNumber(v) {
 	  return (/^\d+$/.test(v)
 	  );
 	}
 
-	if (_.first(pathname) === 'book') {
-	  var id = pathname[1];
-	  if (isStrNumber(id)) {
-	    qwest.get(API + '/book/' + id).then(function (xhr, data) {
-	      _.each(data, function (timeline) {
-	        timeline.Price = Number(timeline.Price);
-	      });
-	      var min = _.reduce(data, function (min, timeline) {
-	        return min.Price > timeline.Price ? timeline : min;
-	      }).Price;
-	      var i = document.createElement('i');
-	      i.textContent = '历史最低价¥ ' + min;
-	      document.querySelector('.price').appendChild(i);
-	    }).catch(function (e) {
-	      console.error(e);
-	    });
-	  }
+	function ErrorHandler(e) {
+	  console.error(e);
 	}
+
+	function GetBookPromise(id) {
+	  return qwest.get(API + '/book/' + id).catch(ErrorHandler);
+	}
+
+	function GetMinPrice(timelines) {
+	  _.each(timelines, function (timeline) {
+	    timeline.Price = Number(timeline.Price);
+	  });
+	  return _.reduce(timelines, function (min, timeline) {
+	    return min.Price > timeline.Price ? timeline : min;
+	  }).Price;
+	}
+
+	var pathname = Pathname2Array(new URL(document.URL).pathname);
+
+	if (_.first(pathname) === 'book') {
+	  (function () {
+	    var id = pathname[1];
+	    if (!StrIsNumber(id)) {
+	      return;
+	    }
+	    GetBookPromise(id).then(function (xhr, timelines) {
+	      var min_price = GetMinPrice(timelines);
+	      var i = document.createElement('i');
+	      i.textContent = '历史最低价¥ ' + min_price;
+	      document.querySelector('.price').appendChild(i);
+	    }).catch(ErrorHandler);
+	  })();
+	}
+
+	_.each(document.querySelectorAll('a.title[href^="/book/"]'), function (a) {
+	  var pathname = Pathname2Array(a.pathname);
+	  var id = pathname[1];
+	  if (!StrIsNumber(id)) {
+	    return;
+	  }
+	  GetBookPromise(id).then(function (xhr, timelines) {
+	    var min_price = GetMinPrice(timelines);
+	    var i = document.createElement('i');
+	    i.textContent = '历史最低价¥ ' + min_price;
+	    a.parentElement.appendChild(i);
+	  }).catch(ErrorHandler);
+	});
 
 /***/ },
 /* 1 */
