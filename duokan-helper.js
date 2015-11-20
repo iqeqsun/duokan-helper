@@ -48,18 +48,18 @@
 
 	var _lodash = __webpack_require__(1);
 
-	var _ = _interopRequireWildcard(_lodash);
+	var _lodash2 = _interopRequireDefault(_lodash);
 
 	var _qwest = __webpack_require__(3);
 
-	var qwest = _interopRequireWildcard(_qwest);
+	var _qwest2 = _interopRequireDefault(_qwest);
 
-	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var API = 'http://127.0.0.1:8080';
 
 	function Pathname2Array(s) {
-	  return _.rest(s.split('/'));
+	  return _lodash2.default.rest(s.split('/'));
 	}
 
 	function StrIsNumber(v) {
@@ -72,48 +72,101 @@
 	}
 
 	function GetBookPromise(id) {
-	  return qwest.get(API + '/book/' + id).catch(ErrorHandler);
+	  return _qwest2.default.get(API + '/book/' + id).catch(ErrorHandler);
+	}
+
+	function CreateInfoElement(text) {
+	  var info = document.createElement('i');
+	  info.textContent = text;
+	  return info;
+	}
+
+	function Log() {
+	  var title = arguments.length <= 0 || arguments[0] === undefined ? null : arguments[0];
+
+	  if (title === null) {
+	    return console.log.bind(console);
+	  }
+	  return function (obj) {
+	    if (_lodash2.default.isString(obj)) {
+	      console.log(title + ': ' + obj);
+	    } else {
+	      console.log(title + ':');
+	      console.log(obj);
+	    }
+	  };
+	}
+
+	function GetMinTimeline(timelines) {
+	  _lodash2.default.each(timelines, function (timeline) {
+	    timeline.Price = Number(timeline.Price);
+	  });
+	  return _lodash2.default.reduceRight(timelines, function (min, timeline) {
+	    return min.Price > timeline.Price ? timeline : min;
+	  });
 	}
 
 	function GetMinPrice(timelines) {
-	  _.each(timelines, function (timeline) {
-	    timeline.Price = Number(timeline.Price);
-	  });
-	  return _.reduce(timelines, function (min, timeline) {
-	    return min.Price > timeline.Price ? timeline : min;
-	  }).Price;
+	  return GetMinTimeline(timelines).Price;
 	}
 
-	var pathname = Pathname2Array(new URL(document.URL).pathname);
-
-	if (_.first(pathname) === 'book') {
-	  (function () {
-	    var id = pathname[1];
-	    if (!StrIsNumber(id)) {
-	      return;
-	    }
-	    GetBookPromise(id).then(function (xhr, timelines) {
-	      var min_price = GetMinPrice(timelines);
-	      var i = document.createElement('i');
-	      i.textContent = '历史最低价¥ ' + min_price;
-	      document.querySelector('.price').appendChild(i);
-	    }).catch(ErrorHandler);
-	  })();
-	}
-
-	_.each(document.querySelectorAll('a.title[href^="/book/"]'), function (a) {
-	  var pathname = Pathname2Array(a.pathname);
+	function BookHandler(pathname) {
 	  var id = pathname[1];
 	  if (!StrIsNumber(id)) {
 	    return;
 	  }
 	  GetBookPromise(id).then(function (xhr, timelines) {
-	    var min_price = GetMinPrice(timelines);
-	    var i = document.createElement('i');
-	    i.textContent = '历史最低价¥ ' + min_price;
-	    a.parentElement.appendChild(i);
+	    var min = GetMinTimeline(timelines);
+	    var price = min.Price;
+	    var time = new Date(min.Timestamp * 1000);
+	    var year = time.getFullYear();
+	    var month = ('0' + (time.getMonth() + 1)).substr(-2);
+	    var day = ('0' + time.getDate()).substr(-2);
+	    var info = CreateInfoElement('于' + year + '-' + month + '-' + day + '为最低价 ¥ ' + price);
+	    document.querySelector('.price').appendChild(info);
 	  }).catch(ErrorHandler);
-	});
+	}
+
+	function FavouriteHandler() {
+	  new MutationObserver(function (mutations) {
+	    (0, _lodash2.default)(mutations).map(function (mutation) {
+	      return mutation.addedNodes;
+	    }).filter(function (nodes) {
+	      return nodes.length > 0;
+	    }).map(_lodash2.default.toArray).flatten().uniq().filter(function (node) {
+	      return node.querySelectorAll;
+	    }).map(function (node) {
+	      return _lodash2.default.toArray(node.querySelectorAll('a.title[href^="/book/"]'));
+	    }).flatten().each(function (a) {
+	      var pathname = Pathname2Array(a.pathname);
+	      var id = pathname[1];
+	      if (!StrIsNumber(id)) {
+	        return;
+	      }
+	      GetBookPromise(id).then(function (xhr, timelines) {
+	        var min_price = GetMinPrice(timelines);
+	        var info = CreateInfoElement('历史最低: ¥ ' + min_price);
+	        a.parentElement.appendChild(info);
+	      }).catch(ErrorHandler);
+	    }).run();
+	  }).observe(document.body, {
+	    childList: true,
+	    subtree: true
+	  });
+	}
+
+	var pathname = Pathname2Array(new URL(document.URL).pathname);
+
+	var handler = {
+	  'book': BookHandler,
+	  'favourite': FavouriteHandler
+	};
+
+	if (_lodash2.default.first(pathname) === 'u') {
+	  pathname.shift();
+	}
+
+	handler[_lodash2.default.first(pathname)](pathname);
 
 /***/ },
 /* 1 */
