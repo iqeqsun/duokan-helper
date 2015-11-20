@@ -57,6 +57,9 @@
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 	var API = 'http://127.0.0.1:8080';
+	var KEY = Symbol('duokan-helper');
+
+	var PASS = function PASS() {};
 
 	function Pathname2Array(s) {
 	  return _lodash2.default.rest(s.split('/'));
@@ -110,12 +113,105 @@
 	  return GetMinTimeline(timelines).Price;
 	}
 
+	function GetCookie(name) {
+	  var value = '; ' + document.cookie;
+	  var parts = value.split('; ' + name + '=');
+	  if (parts.length == 2) {
+	    return parts.pop().split(';').shift();
+	  }
+	}
+
+	function GetFavsPromise() {
+	  var start = arguments.length <= 0 || arguments[0] === undefined ? 0 : arguments[0];
+	  var count = arguments.length <= 1 || arguments[1] === undefined ? 10 : arguments[1];
+
+	  var _t = parseInt(new Date().getTime() / 1e3);
+	  var _c = (GetCookie('device_id') + '&' + _t).split('').reduce(function (t, n) {
+	    return (131 * t + n.charCodeAt(0)) % 65536;
+	  }, 0);
+	  return new Promise(function (resolve, reject) {
+	    _qwest2.default.post('http://www.duokan.com/discover/user/fav/list_favs', {
+	      type: 0,
+	      start: start,
+	      count: count,
+	      _t: _t,
+	      _c: _c
+	    }).then(function (xhr, response) {
+	      return resolve(JSON.parse(response));
+	    }).catch(reject);
+	  });
+	}
+
+	function GetBookIdPromise(source_id) {
+	  return new Promise(function (resolve, reject) {
+	    _qwest2.default.get('http://www.duokan.com/hs/v0/android/store/book/' + source_id).then(function (xhr, response) {
+	      return resolve(response.item);
+	    }).catch(reject);
+	  });
+	}
+
+	function GetWishPromise() {
+	  return new Promise(function (resolve, reject) {
+	    GetFavsPromise().then(function (_ref) {
+	      var total = _ref.total;
+
+	      var count = 30;
+	      var ps = [];
+	      for (var i = 0; i < total; i += count) {
+	        ps.push(GetFavsPromise(i, count));
+	      }
+	      return ps;
+	    }).then(function (ps) {
+	      return Promise.all(ps);
+	    }).then(function (data) {
+	      return (0, _lodash2.default)(data).map(function (_ref2) {
+	        var data = _ref2.data;
+	        return data;
+	      }).flatten().value();
+	    }).then(function (books) {
+	      var t = _lodash2.default.map(books, function (_ref3) {
+	        var source_id = _ref3.source_id;
+	        return GetBookIdPromise(source_id);
+	      });
+	      return t;
+	    }).then(function (ps) {
+	      return Promise.all(ps);
+	    }).then(resolve).catch(reject);
+	  });
+	}
+
+	function AElementHandler(a) {
+	  if (a.parentElement[KEY]) {
+	    return;
+	  }
+	  var pathname = Pathname2Array(a.pathname);
+	  var id = pathname[1];
+	  if (!StrIsNumber(id)) {
+	    return;
+	  }
+	  GetBookPromise(id).then(function (xhr, timelines) {
+	    var min_price = GetMinPrice(timelines);
+	    var info = CreateInfoElement('历史最低: ¥ ' + min_price);
+	    a.parentElement.style.overflow = 'visible';
+	    a.parentElement.appendChild(info);
+	    a.parentElement[KEY] = true;
+	  }).catch(ErrorHandler);
+	}
+
+	function CommonHandler() {
+	  _lodash2.default.each(document.querySelectorAll('a.title[href^="/book/"]'), AElementHandler);
+	}
+
 	function BookHandler(pathname) {
 	  var id = pathname[1];
 	  if (!StrIsNumber(id)) {
 	    return;
 	  }
 	  GetBookPromise(id).then(function (xhr, timelines) {
+	    var parentElement = document.querySelector('.price');
+	    if (parentElement[KEY]) {
+	      return;
+	    }
 	    var min = GetMinTimeline(timelines);
 	    var price = min.Price;
 	    var time = new Date(min.Timestamp * 1000);
@@ -123,7 +219,8 @@
 	    var month = ('0' + (time.getMonth() + 1)).substr(-2);
 	    var day = ('0' + time.getDate()).substr(-2);
 	    var info = CreateInfoElement('于' + year + '-' + month + '-' + day + '为最低价 ¥ ' + price);
-	    document.querySelector('.price').appendChild(info);
+	    parentElement.appendChild(info);
+	    parentElement[KEY] = true;
 	  }).catch(ErrorHandler);
 	}
 
@@ -137,18 +234,7 @@
 	      return node.querySelectorAll;
 	    }).map(function (node) {
 	      return _lodash2.default.toArray(node.querySelectorAll('a.title[href^="/book/"]'));
-	    }).flatten().each(function (a) {
-	      var pathname = Pathname2Array(a.pathname);
-	      var id = pathname[1];
-	      if (!StrIsNumber(id)) {
-	        return;
-	      }
-	      GetBookPromise(id).then(function (xhr, timelines) {
-	        var min_price = GetMinPrice(timelines);
-	        var info = CreateInfoElement('历史最低: ¥ ' + min_price);
-	        a.parentElement.appendChild(info);
-	      }).catch(ErrorHandler);
-	    }).run();
+	    }).flatten().each(AElementHandler).run();
 	  }).observe(document.body, {
 	    childList: true,
 	    subtree: true
@@ -158,15 +244,18 @@
 	var pathname = Pathname2Array(new URL(document.URL).pathname);
 
 	var handler = {
-	  'book': BookHandler,
-	  'favourite': FavouriteHandler
+	  book: BookHandler, // 单页
+	  favourite: FavouriteHandler, // 收藏
+	  special: CommonHandler, // 专题
+	  r: CommonHandler, // 畅销榜
+	  list: CommonHandler // 分类
 	};
 
 	if (_lodash2.default.first(pathname) === 'u') {
 	  pathname.shift();
 	}
 
-	handler[_lodash2.default.first(pathname)](pathname);
+	(handler[_lodash2.default.first(pathname)] || PASS)(pathname);
 
 /***/ },
 /* 1 */
