@@ -1,3 +1,5 @@
+var webpack = require('webpack')
+
 module.exports = {
   entry: './duokan-helper.es',
   output: {
@@ -12,5 +14,8 @@ module.exports = {
         presets: ['react', 'es2015']
       }
     }]
-  }
+  },
+  plugins: [
+    //new webpack.optimize.UglifyJsPlugin()
+  ]
 }
