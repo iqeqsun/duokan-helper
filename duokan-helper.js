@@ -46,8 +46,6 @@
 
 	'use strict';
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
 	__webpack_require__(1);
 
 	var _lodash = __webpack_require__(191);
@@ -65,6 +63,10 @@
 	var _reactDom = __webpack_require__(353);
 
 	var _reactDom2 = _interopRequireDefault(_reactDom);
+
+	var _classnames = __webpack_require__(354);
+
+	var _classnames2 = _interopRequireDefault(_classnames);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -112,26 +114,28 @@
 	var BookItem = (function (_React$Component) {
 	  _inherits(BookItem, _React$Component);
 
-	  function BookItem() {
+	  function BookItem(props) {
 	    _classCallCheck(this, BookItem);
 
-	    return _possibleConstructorReturn(this, Object.getPrototypeOf(BookItem).apply(this, arguments));
-	  }
+	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(BookItem).call(this, props));
 
-	  _createClass(BookItem, [{
-	    key: 'render',
-	    value: function render() {
-	      var book = this.props.book;
+	    _this.MouseLeaveHandler = function () {
+	      _this.setState({ hover: false });
+	    };
+
+	    _this.MouseEnterHandler = function () {
+	      _this.setState({ hover: true });
+	    };
+
+	    _this.render = function () {
+	      var li_class = (0, _classnames2.default)('u-bookitm1', 'u-bookitm1-1', {
+	        'u-bookitm1-hover': _this.state.hover
+	      });
+	      var book = _this.props.book;
 	      var KEY = book.sid;
-	      book.cover = book.cover.replace(/m$/, 't');
-	      book.url = '/book/' + book.sid;
-	      if (book.new_price) {
-	        book.old_price = book.price;
-	        book.price = book.new_price;
-	      }
 	      return _react2.default.createElement(
 	        'li',
-	        { className: 'u-bookitm1 u-bookitm1-1' },
+	        { className: li_class, onMouseLeave: _this.MouseLeaveHandler, onMouseEnter: _this.MouseEnterHandler },
 	        _react2.default.createElement(
 	          'a',
 	          { className: 'book', href: book.url, hidefocus: 'hidefocus' },
@@ -192,15 +196,7 @@
 	              'span',
 	              { key: id() },
 	              '已加入购物车'
-	            ) : [_react2.default.createElement(
-	              'a',
-	              { key: id(), href: 'javascript:void(0)', className: 'j-cart', hidefocus: 'hidefocus' },
-	              '加入购物车'
-	            ), _react2.default.createElement(
-	              'span',
-	              { key: id(), style: { display: 'none' } },
-	              '已加入购物车'
-	            )] : !!book.paid ? _react2.default.createElement(
+	            ) : undefined : !!book.paid ? _react2.default.createElement(
 	              'span',
 	              { key: id() },
 	              '已领取'
@@ -208,16 +204,6 @@
 	              'a',
 	              { key: id(), href: '<%= book.url %>', hidefocus: 'hidefocus' },
 	              '去领取'
-	            ),
-	            _react2.default.createElement(
-	              'span',
-	              { className: 'u-sep' },
-	              '|'
-	            ),
-	            _react2.default.createElement(
-	              'a',
-	              { className: 'j-delete delete', href: 'javascript:void(0);', hidefocus: 'hidefocus' },
-	              '取消收藏'
 	            )
 	          )
 	        ),
@@ -232,8 +218,11 @@
 	          )
 	        )
 	      );
-	    }
-	  }]);
+	    };
+
+	    _this.state = { hover: false };
+	    return _this;
+	  }
 
 	  return BookItem;
 	})(_react2.default.Component);
@@ -247,8 +236,8 @@
 	  );
 	}
 
-	function ErrorHandler(e) {
-	  console.error(e);
+	function ErrorHandler() {
+	  console.error(arugments);
 	}
 
 	function GetBookPromise(id) {
@@ -417,12 +406,35 @@
 	    subtree: true
 	  });
 	  GetWishPromise().then(function (books) {
-	    var container = document.querySelector('.j-container');
-	    _lodash2.default.each(books, _lodash2.default.wrap(function (book) {
+	    var container = document.querySelector('.j-container'),
+	        local = JSON.parse(localStorage.getItem('local')),
+	        paid = local.paidList,
+	        paid_ids = paid.map(function (book) {
+	      return book.id;
+	    }),
+	        fav = local.fav.list,
+	        fav_ids = fav.map(function (book) {
+	      return book.id;
+	    }),
+	        carted = local.cart,
+	        carted_ids = carted.map(function (book) {
+	      return book.id;
+	    });
+	    (0, _lodash2.default)(books).filter(function (book) {
+	      return !_lodash2.default.include(fav_ids, book.book_id);
+	    }).each(_lodash2.default.wrap(function (book) {
+	      book.paid = _lodash2.default.include(paid_ids, book.book_id);
+	      book.carted = _lodash2.default.include(carted_ids, book.book_id);
+	      book.cover = book.cover.replace(/m$/, 't');
+	      book.url = '/book/' + book.sid;
+	      if (book.new_price) {
+	        book.old_price = book.price;
+	        book.price = book.new_price;
+	      }
 	      var div = document.createElement('div');
 	      _reactDom2.default.render(_react2.default.createElement(BookItem, { book: book }), div);
 	      container.appendChild(div);
-	    }, _lodash2.default.defer));
+	    }, _lodash2.default.defer)).run();
 	  });
 	}
 
@@ -38221,6 +38233,60 @@
 	'use strict';
 
 	module.exports = __webpack_require__(199);
+
+
+/***/ },
+/* 354 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var __WEBPACK_AMD_DEFINE_RESULT__;/*!
+	  Copyright (c) 2015 Jed Watson.
+	  Licensed under the MIT License (MIT), see
+	  http://jedwatson.github.io/classnames
+	*/
+	/* global define */
+
+	(function () {
+		'use strict';
+
+		var hasOwn = {}.hasOwnProperty;
+
+		function classNames () {
+			var classes = '';
+
+			for (var i = 0; i < arguments.length; i++) {
+				var arg = arguments[i];
+				if (!arg) continue;
+
+				var argType = typeof arg;
+
+				if (argType === 'string' || argType === 'number') {
+					classes += ' ' + arg;
+				} else if (Array.isArray(arg)) {
+					classes += ' ' + classNames.apply(null, arg);
+				} else if (argType === 'object') {
+					for (var key in arg) {
+						if (hasOwn.call(arg, key) && arg[key]) {
+							classes += ' ' + key;
+						}
+					}
+				}
+			}
+
+			return classes.substr(1);
+		}
+
+		if (typeof module !== 'undefined' && module.exports) {
+			module.exports = classNames;
+		} else if (true) {
+			// register as 'classnames', consistent with npm package name
+			!(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
+				return classNames;
+			}.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
+		} else {
+			window.classNames = classNames;
+		}
+	}());
 
 
 /***/ }

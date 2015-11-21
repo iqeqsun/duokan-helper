@@ -5,6 +5,7 @@
   "main": "duokan-helper.js",
   "dependencies": {
     "babel-polyfill": "^6.2.0",
+    "classnames": "^2.2.0",
     "lodash": "^3.10.1",
     "qwest": "^2.2.3",
     "react": "^0.14.3",
@@ -13,9 +14,9 @@
   "devDependencies": {
     "babel-core": "^6.1.21",
     "babel-loader": "^6.1.0",
-    "babel-plugin-transform-do-expressions": "^6.1.18",
     "babel-preset-es2015": "^6.1.18",
     "babel-preset-react": "^6.1.18",
+    "babel-preset-stage-0": "^6.1.18",
     "webpack": "^1.12.6"
   },
   "scripts": {

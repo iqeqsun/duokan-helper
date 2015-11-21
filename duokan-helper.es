@@ -5,6 +5,7 @@ import _ from 'lodash'
 import qwest from 'qwest'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import classNames from 'classnames'
 
 const API = 'http://127.0.0.1:8080'
 const KEY = Symbol('duokan-helper')
@@ -22,17 +23,24 @@ const id = (() => {
 })()
 
 class BookItem extends React.Component {
-  render() {
+  constructor(props) {
+    super(props)
+    this.state = {hover: false}
+  }
+  MouseLeaveHandler = () => {
+    this.setState({hover: false})
+  }
+  MouseEnterHandler = () => {
+    this.setState({hover: true})
+  }
+  render = () => {
+    let li_class = classNames('u-bookitm1','u-bookitm1-1', {
+      'u-bookitm1-hover': this.state.hover
+    })
     let book = this.props.book
     const KEY = book.sid
-    book.cover = book.cover.replace(/m$/, 't')
-    book.url = `/book/${book.sid}`
-    if (book.new_price) {
-      book.old_price = book.price
-      book.price = book.new_price
-    }
     return (
-      <li className="u-bookitm1 u-bookitm1-1">
+      <li className={li_class} onMouseLeave={this.MouseLeaveHandler} onMouseEnter={this.MouseEnterHandler}>
         <a className="book" href={ book.url } hidefocus="hidefocus">
           <img src={ book.cover } ondragstart="return false;" oncontextmenu="return false;" onload="onLoadImg(this)" style={{display: 'block'}} />
         </a>
@@ -61,10 +69,12 @@ class BookItem extends React.Component {
                 } else if (!!book.carted) {
                   <span key={id()}>已加入购物车</span>
                 } else {
+                  /*
                   [
                     <a key={id()} href="javascript:void(0)" className="j-cart" hidefocus="hidefocus">加入购物车</a>,
                     <span key={id()} style={{display: 'none'}}>已加入购物车</span>
                   ]
+                  */
                 }
               } else {
                 if (!!book.paid) {
@@ -74,7 +84,7 @@ class BookItem extends React.Component {
                 }
               }
             }}
-            <span className="u-sep">|</span><a className="j-delete delete" href="javascript:void(0);" hidefocus="hidefocus">取消收藏</a>
+            {/*<span className="u-sep">|</span><a className="j-delete delete" href="javascript:void(0);" hidefocus="hidefocus">取消收藏</a>*/}
           </div>
         </div>
         <div className="mask j-mask">
@@ -94,8 +104,8 @@ function StrIsNumber(v) {
   return /^\d+$/.test(v)
 }
 
-function ErrorHandler(e) {
-  console.error(e)
+function ErrorHandler() {
+  console.error(arugments)
 }
 
 function GetBookPromise(id) {
@@ -124,7 +134,7 @@ function Log(title = null) {
 }
 
 function GetMinTimeline(timelines) {
-  _.each(timelines, (timeline) => {
+  _.each(timelines, timeline => {
     timeline.Price = Number(timeline.Price)
   })
   return _.reduceRight(timelines, (min, timeline) => min.Price > timeline.Price ? timeline : min) || {Price: NaN}
@@ -249,7 +259,7 @@ function BookHandler(pathname) {
 }
 
 function FavouriteHandler() {
-  new MutationObserver((mutations) => {
+  new MutationObserver(mutations => {
     _(mutations)
       .map(mutation => mutation.addedNodes)
       .filter(nodes => nodes.length > 0)
@@ -268,11 +278,29 @@ function FavouriteHandler() {
   })
   GetWishPromise().then((books) => {
     let container = document.querySelector('.j-container')
-    _.each(books, _.wrap((book) => {
-      let div = document.createElement('div')
-      ReactDOM.render(<BookItem book={book} />, div)
-      container.appendChild(div)
-    }, _.defer))
+      , local = JSON.parse(localStorage.getItem('local'))
+      , paid = local.paidList
+      , paid_ids = paid.map(book => book.id)
+      , fav = local.fav.list
+      , fav_ids = fav.map(book => book.id)
+      , carted = local.cart
+      , carted_ids = carted.map(book => book.id)
+    _(books)
+      .filter((book) => !_.include(fav_ids, book.book_id))
+      .each(_.wrap(book => {
+        book.paid = _.include(paid_ids, book.book_id)
+        book.carted = _.include(carted_ids, book.book_id)
+        book.cover = book.cover.replace(/m$/, 't')
+        book.url = `/book/${book.sid}`
+        if (book.new_price) {
+          book.old_price = book.price
+          book.price = book.new_price
+        }
+        let div = document.createElement('div')
+        ReactDOM.render(<BookItem book={book} />, div)
+        container.appendChild(div)
+      }, _.defer))
+      .run()
   })
 }
 
