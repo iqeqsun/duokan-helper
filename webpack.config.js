@@ -11,7 +11,8 @@ module.exports = {
       test: /\.es$/,
       loader: 'babel',
       query: {
-        presets: ['react', 'es2015']
+        presets: ['es2015', 'react'],
+        plugins: ['transform-do-expressions']
       }
     }]
   },
