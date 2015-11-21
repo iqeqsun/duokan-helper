@@ -7,7 +7,10 @@ module.exports = {
   module: {
     loaders: [{
       test: /\.es$/,
-      loader: 'babel-loader?presets[]=es2015'
+      loader: 'babel',
+      query: {
+        presets: ['react', 'es2015']
+      }
     }]
   }
 }
