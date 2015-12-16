@@ -164,7 +164,14 @@ function GetFavsPromise(start = 0, count = 10) {
         _t,
         _c
       })
-      .then((xhr, response) => resolve(JSON.parse(response)))
+      .then((xhr, response) => {
+        try {
+          resolve(JSON.parse(response))
+        } catch(e) {
+          console.log(response)
+          reject(e)
+        }
+      })
       .catch(reject)
   })
 }
@@ -217,11 +224,14 @@ function AElementHandler(a) {
   }
   let pathname = Pathname2Array(a.pathname)
     , id = pathname[1]
+  //TODO: duokan's newly url pattern http://www.duokan.com/book/c11725b8126b4dc1ada0d25b1367b3d1
+  /*
   if (!StrIsNumber(id)) {
     return
   }
-  GetBookPromise(id).then((xhr, timelines) => {
-      let min_price = GetMinPrice(timelines).toFixed(2)
+  */
+  GetBookPromise(id).then((xhr, {Timeline}) => {
+      let min_price = GetMinPrice(Timeline).toFixed(2)
         , info = CreateInfoElement(`历史最低: ¥ ${min_price}`)
       a.parentElement.style.overflow = 'visible'
       a.parentElement.appendChild(info)
@@ -240,12 +250,12 @@ function BookHandler(pathname) {
     return
   }
   GetBookPromise(id)
-    .then((xhr, timelines) => {
+    .then((xhr, {Timeline}) => {
       let parentElement = document.querySelector('.price')
       if (parentElement[KEY]) {
         return
       }
-      let min = GetMinTimeline(timelines)
+      let min = GetMinTimeline(Timeline)
         , price = min.Price.toFixed(2)
         , time = new Date(min.Timestamp * 1000)
         , year = time.getFullYear()

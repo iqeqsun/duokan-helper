@@ -303,7 +303,12 @@
 	      _t: _t,
 	      _c: _c
 	    }).then(function (xhr, response) {
-	      return resolve(JSON.parse(response));
+	      try {
+	        resolve(JSON.parse(response));
+	      } catch (e) {
+	        console.log(response);
+	        reject(e);
+	      }
 	    }).catch(reject);
 	  });
 	}
@@ -352,11 +357,16 @@
 	  }
 	  var pathname = Pathname2Array(a.pathname),
 	      id = pathname[1];
+	  //TODO: duokan's newly url pattern http://www.duokan.com/book/c11725b8126b4dc1ada0d25b1367b3d1
+	  /*
 	  if (!StrIsNumber(id)) {
-	    return;
+	    return
 	  }
-	  GetBookPromise(id).then(function (xhr, timelines) {
-	    var min_price = GetMinPrice(timelines).toFixed(2),
+	  */
+	  GetBookPromise(id).then(function (xhr, _ref4) {
+	    var Timeline = _ref4.Timeline;
+
+	    var min_price = GetMinPrice(Timeline).toFixed(2),
 	        info = CreateInfoElement('历史最低: ¥ ' + min_price);
 	    a.parentElement.style.overflow = 'visible';
 	    a.parentElement.appendChild(info);
@@ -373,12 +383,14 @@
 	  if (!StrIsNumber(id)) {
 	    return;
 	  }
-	  GetBookPromise(id).then(function (xhr, timelines) {
+	  GetBookPromise(id).then(function (xhr, _ref5) {
+	    var Timeline = _ref5.Timeline;
+
 	    var parentElement = document.querySelector('.price');
 	    if (parentElement[KEY]) {
 	      return;
 	    }
-	    var min = GetMinTimeline(timelines),
+	    var min = GetMinTimeline(Timeline),
 	        price = min.Price.toFixed(2),
 	        time = new Date(min.Timestamp * 1000),
 	        year = time.getFullYear(),
