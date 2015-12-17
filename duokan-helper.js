@@ -46,6 +46,8 @@
 
 	'use strict';
 
+	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
+
 	__webpack_require__(1);
 
 	var _lodash = __webpack_require__(191);
@@ -360,6 +362,9 @@
 	      as = _lodash2.default.pluck(obj, 'a');
 	  GetBookPromise(ids.join(',')).then(function (xhr, books) {
 	    for (var i in books) {
+	      if (books[i] === null) {
+	        continue;
+	      }
 	      var timeline = books[i]['Timeline'],
 	          min_price = GetMinPrice(timeline).toFixed(2),
 	          info = CreateInfoElement('历史最低: ¥ ' + min_price),
@@ -397,13 +402,15 @@
 	  }).catch(ErrorHandler);
 	}
 
-	function BookHandler(pathname) {
-	  var id = pathname[1];
-	  if (!StrIsNumber(id)) {
-	    return;
-	  }
-	  GetBookPromise(id).then(function (xhr, _ref4) {
-	    var Timeline = _ref4.Timeline;
+	function BookHandler(_ref4) {
+	  var _ref5 = _slicedToArray(_ref4, 2);
+
+	  var id = _ref5[1];
+
+	  GetBookPromise(id).then(function (xhr, _ref6) {
+	    var _ref7 = _slicedToArray(_ref6, 1);
+
+	    var Timeline = _ref7[0].Timeline;
 
 	    var parentElement = document.querySelector('.price');
 	    if (parentElement[KEY]) {

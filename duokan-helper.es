@@ -227,6 +227,9 @@ function AElementsHandler(elements) {
     , as = _.pluck(obj, 'a')
   GetBookPromise(ids.join(',')).then((xhr, books) => {
     for (let i in books) {
+      if (books[i] === null) {
+        continue
+      }
       let timeline = books[i]['Timeline']
         , min_price = GetMinPrice(timeline).toFixed(2)
         , info = CreateInfoElement(`历史最低: ¥ ${min_price}`)
@@ -266,13 +269,8 @@ function CommonHandler() {
   .catch(ErrorHandler)
 }
 
-function BookHandler(pathname) {
-  let id = pathname[1]
-  if (!StrIsNumber(id)) {
-    return
-  }
-  GetBookPromise(id)
-    .then((xhr, {Timeline}) => {
+function BookHandler([, id]) {
+  GetBookPromise(id).then((xhr, [{Timeline}]) => {
       let parentElement = document.querySelector('.price')
       if (parentElement[KEY]) {
         return
