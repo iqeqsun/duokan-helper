@@ -351,31 +351,50 @@
 	  });
 	}
 
-	function AElementHandler(a) {
+	function AElementsHandler(elements) {
+	  if (elements.length === 0) {
+	    return;
+	  }
+	  var obj = _lodash2.default.map(elements, getIdFromA),
+	      ids = _lodash2.default.pluck(obj, 'id'),
+	      as = _lodash2.default.pluck(obj, 'a');
+	  GetBookPromise(ids.join(',')).then(function (xhr, books) {
+	    for (var i in books) {
+	      var timeline = books[i]['Timeline'],
+	          min_price = GetMinPrice(timeline).toFixed(2),
+	          info = CreateInfoElement('历史最低: ¥ ' + min_price),
+	          a = as[i];
+	      a.parentElement.style.overflow = 'visible';
+	      a.parentElement.appendChild(info);
+	      a.parentElement[KEY] = true;
+	    }
+	  }).catch(ErrorHandler);
+	}
+
+	function getIdFromA(a) {
 	  if (a.parentElement[KEY]) {
 	    return;
 	  }
 	  var pathname = Pathname2Array(a.pathname),
 	      id = pathname[1];
-	  //TODO: duokan's newly url pattern http://www.duokan.com/book/c11725b8126b4dc1ada0d25b1367b3d1
-	  /*
-	  if (!StrIsNumber(id)) {
-	    return
-	  }
-	  */
-	  GetBookPromise(id).then(function (xhr, _ref4) {
-	    var Timeline = _ref4.Timeline;
-
-	    var min_price = GetMinPrice(Timeline).toFixed(2),
-	        info = CreateInfoElement('历史最低: ¥ ' + min_price);
-	    a.parentElement.style.overflow = 'visible';
-	    a.parentElement.appendChild(info);
-	    a.parentElement[KEY] = true;
-	  }).catch(ErrorHandler);
+	  return { id: id, a: a };
 	}
 
 	function CommonHandler() {
-	  _lodash2.default.each(document.querySelectorAll('a.title[href^="/book/"]'), AElementHandler);
+	  var obj = _lodash2.default.map(document.querySelectorAll('a.title[href^="/book/"]'), getIdFromA),
+	      ids = _lodash2.default.pluck(obj, 'id'),
+	      as = _lodash2.default.pluck(obj, 'a');
+	  GetBookPromise(ids.join(',')).then(function (xhr, books) {
+	    for (var i in books) {
+	      var timeline = books[i]['Timeline'],
+	          min_price = GetMinPrice(timeline).toFixed(2),
+	          info = CreateInfoElement('历史最低: ¥ ' + min_price),
+	          a = as[i];
+	      a.parentElement.style.overflow = 'visible';
+	      a.parentElement.appendChild(info);
+	      a.parentElement[KEY] = true;
+	    }
+	  }).catch(ErrorHandler);
 	}
 
 	function BookHandler(pathname) {
@@ -383,8 +402,8 @@
 	  if (!StrIsNumber(id)) {
 	    return;
 	  }
-	  GetBookPromise(id).then(function (xhr, _ref5) {
-	    var Timeline = _ref5.Timeline;
+	  GetBookPromise(id).then(function (xhr, _ref4) {
+	    var Timeline = _ref4.Timeline;
 
 	    var parentElement = document.querySelector('.price');
 	    if (parentElement[KEY]) {
@@ -404,7 +423,7 @@
 
 	function FavouriteHandler() {
 	  new MutationObserver(function (mutations) {
-	    (0, _lodash2.default)(mutations).map(function (mutation) {
+	    var as = (0, _lodash2.default)(mutations).map(function (mutation) {
 	      return mutation.addedNodes;
 	    }).filter(function (nodes) {
 	      return nodes.length > 0;
@@ -412,7 +431,8 @@
 	      return node.querySelectorAll;
 	    }).map(function (node) {
 	      return _lodash2.default.toArray(node.querySelectorAll('a.title[href^="/book/"]'));
-	    }).flatten().each(AElementHandler).run();
+	    }).flatten().value();
+	    AElementsHandler(as);
 	  }).observe(document.body, {
 	    childList: true,
 	    subtree: true

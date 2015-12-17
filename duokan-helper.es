@@ -218,30 +218,52 @@ function GetWishPromise() {
   })
 }
 
-function AElementHandler(a) {
+function AElementsHandler(elements) {
+  if (elements.length === 0) {
+    return
+  }
+  let obj = _.map(elements, getIdFromA)
+    , ids = _.pluck(obj, 'id')
+    , as = _.pluck(obj, 'a')
+  GetBookPromise(ids.join(',')).then((xhr, books) => {
+    for (let i in books) {
+      let timeline = books[i]['Timeline']
+        , min_price = GetMinPrice(timeline).toFixed(2)
+        , info = CreateInfoElement(`历史最低: ¥ ${min_price}`)
+        , a = as[i]
+      a.parentElement.style.overflow = 'visible'
+      a.parentElement.appendChild(info)
+      a.parentElement[KEY] = true
+    }
+  })
+  .catch(ErrorHandler)
+}
+
+function getIdFromA(a) {
   if (a.parentElement[KEY]) {
     return
   }
   let pathname = Pathname2Array(a.pathname)
     , id = pathname[1]
-  //TODO: duokan's newly url pattern http://www.duokan.com/book/c11725b8126b4dc1ada0d25b1367b3d1
-  /*
-  if (!StrIsNumber(id)) {
-    return
-  }
-  */
-  GetBookPromise(id).then((xhr, {Timeline}) => {
-      let min_price = GetMinPrice(Timeline).toFixed(2)
-        , info = CreateInfoElement(`历史最低: ¥ ${min_price}`)
-      a.parentElement.style.overflow = 'visible'
-      a.parentElement.appendChild(info)
-      a.parentElement[KEY] = true
-    })
-    .catch(ErrorHandler)
+  return {id, a}
 }
 
 function CommonHandler() {
-  _.each(document.querySelectorAll('a.title[href^="/book/"]'), AElementHandler)
+  let obj = _.map(document.querySelectorAll('a.title[href^="/book/"]'), getIdFromA)
+    , ids = _.pluck(obj, 'id')
+    , as = _.pluck(obj, 'a')
+  GetBookPromise(ids.join(',')).then((xhr, books) => {
+    for (let i in books) {
+      let timeline = books[i]['Timeline']
+        , min_price = GetMinPrice(timeline).toFixed(2)
+        , info = CreateInfoElement(`历史最低: ¥ ${min_price}`)
+        , a = as[i]
+      a.parentElement.style.overflow = 'visible'
+      a.parentElement.appendChild(info)
+      a.parentElement[KEY] = true
+    }
+  })
+  .catch(ErrorHandler)
 }
 
 function BookHandler(pathname) {
@@ -270,7 +292,7 @@ function BookHandler(pathname) {
 
 function FavouriteHandler() {
   new MutationObserver(mutations => {
-    _(mutations)
+    let as = _(mutations)
       .map(mutation => mutation.addedNodes)
       .filter(nodes => nodes.length > 0)
       .map(_.toArray)
@@ -280,8 +302,8 @@ function FavouriteHandler() {
       .map(node => _.toArray(node.querySelectorAll(
         'a.title[href^="/book/"]')))
       .flatten()
-      .each(AElementHandler)
-      .run()
+      .value()
+    AElementsHandler(as)
   }).observe(document.body, {
     childList: true,
     subtree: true
