@@ -1,9 +1,15 @@
 {
   "manifest_version": 2,
 
-  "name": "Duokan Helper",
-  "description": "多看助手",
+  "name": "多看小助手",
+  "description": "显示多看阅读书籍的历史最低价格和豆瓣评分.",
   "version": "1.0.0",
+
+  "icons": {
+    "16": "images/icon16.png",
+    "48": "images/icon48.png",
+    "128": "images/icon128.png"
+  },
 
   "content_scripts": [{
     "matches": ["http://www.duokan.com/*"],
