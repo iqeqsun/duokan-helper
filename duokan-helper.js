@@ -343,7 +343,7 @@
 
 	  return new Promise(function (resolve, reject) {
 	    (0, _reqwest2.default)({
-	      url: 'https://api.douban.com/v2/book/search?&q=' + encodeURIComponent(name),
+	      url: 'https://api.douban.com/v2/book/search?&q=' + encodeURIComponent(title),
 	      type: 'json'
 	    }).then(function (_ref2) {
 	      var books = _ref2.books;
@@ -408,6 +408,15 @@
 	      title,
 	      ' 的评价'
 	    )
+	  ));
+	}
+
+	function createDoubanRating(rating) {
+	  return createElementByReact(_react2.default.createElement(
+	    'span',
+	    null,
+	    '豆瓣评分: ',
+	    rating
 	  ));
 	}
 
@@ -505,11 +514,11 @@
 	      var title = _ref10.title;
 	      var authors = _ref10.authors;
 	      var translators = _ref10.translators;
-	      var publisher = _ref10.publisher;
-	      title, authors, translators, publisher;
-	    }).then(log()).then(searchBookByDoubanApiPromise).then(function (book) {
+	      var rights = _ref10.rights;
+	      return { title: title, authors: authors, translators: translators, publisher: rights };
+	    }).then(searchBookByDoubanApiPromise).then(function (book) {
 	      parentElement.appendChild(createDoubanLink(title, book.alt));
-	      log('duoban')(book);
+	      parentElement.appendChild(createDoubanRating(book.rating.average));
 	    });
 	    parentElement[KEY] = true;
 	  }).catch(errorHandler);

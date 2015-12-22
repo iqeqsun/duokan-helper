@@ -191,7 +191,7 @@ function getBookInfoByDuokanApiPromise(id) {
 function searchBookByDoubanApiPromise({title, authors='', translators='', publisher=''}) {
   return new Promise((resolve, reject) => {
     reqwest({
-        url: `https://api.douban.com/v2/book/search?&q=${encodeURIComponent(name)}`
+        url: `https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`
       , type: 'json'
     }).then(({books}) => {
       let book = _(books).each(book => {
@@ -248,6 +248,10 @@ function createElementByReact(jsx) {
 
 function createDoubanLink(title, url = `https://book.douban.com/subject_search?search_text=${encodeURIComponent(title)}`) {
   return createElementByReact(<div><a href={url} target="_blank">到豆瓣看大家对 {title} 的评价</a></div>)
+}
+
+function createDoubanRating(rating) {
+  return createElementByReact(<span>豆瓣评分: {rating}</span>)
 }
 
 function createAmazonLink(title) {
@@ -325,12 +329,11 @@ function singleHandler([, id]) {
 
       parentElement.appendChild(createAmazonLink(title))
       getBookInfoByDuokanApiPromise(id)
-      .then(({title, authors, translators, publisher}) => {title, authors, translators, publisher})
-      .then(log())
+      .then(({title, authors, translators, rights}) => ({title, authors, translators, publisher: rights}))
       .then(searchBookByDoubanApiPromise)
       .then(book => {
         parentElement.appendChild(createDoubanLink(title, book.alt))
-        log('duoban')(book)
+        parentElement.appendChild(createDoubanRating(book.rating.average))
       })
       parentElement[KEY] = true
     })
