@@ -3,8 +3,8 @@
 import 'babel-polyfill'
 import _ from 'lodash'
 import qwest from 'qwest'
-import reqwest from 'reqwest'
 import React from 'react'
+import reqwest from 'reqwest'
 import ReactDOM from 'react-dom'
 import classNames from 'classnames'
 import leven from 'leven'
@@ -130,6 +130,7 @@ function log(title = null) {
         console.log(`${title}:`)
         console.log(obj)
       }
+      return obj
     }
   } catch (e) {
     console.error(e)
@@ -187,30 +188,25 @@ function getBookInfoByDuokanApiPromise(id) {
   })
 }
 
-function searchBookByDoubanApiPromise({name, authors, translators, publisher}) {
+function searchBookByDoubanApiPromise({title, authors='', translators='', publisher=''}) {
   return new Promise((resolve, reject) => {
     reqwest({
         url: `https://api.douban.com/v2/book/search?&q=${encodeURIComponent(name)}`
-      , type: 'jsonp'
-      , jsonpCallback: 'callback'
-    }).then(resp => {
-        log()(resp)
-        let book = _(books).each(book => {
-          let levenOfTitle = leven(name, book.title)
-            , levenOfAuthor = leven(authors, book.author.join('，'))
-            , levenOfTranslator = leven(translators, book.translator.join('，'))
-            , levenOfPublisher = leven(publisher, book.publisher)
-          book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 + levenOfTranslator * 5
-        })
-        .min('levenValue')
-        .value()
-        log('Douban')(book.alt)
+      , type: 'json'
+    }).then(({books}) => {
+      let book = _(books).each(book => {
+        let levenOfTitle = leven(title, book.title)
+          , levenOfAuthor = leven(authors, book.author.join('，'))
+          , levenOfTranslator = leven(translators, book.translator.join('，'))
+          , levenOfPublisher = leven(publisher, book.publisher)
+        book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 + levenOfTranslator * 5
       })
-      .catch(reject)
+      .min('levenValue')
+      ;(book ? resolve : reject)(book)
+    })
+    .catch(reject)
   })
 }
-
-searchBookByDoubanApiPromise({name: '嫌疑人X的献身'})
 
 function getWishPromise() {
   return new Promise((resolve, reject) => {
@@ -250,8 +246,8 @@ function createElementByReact(jsx) {
   return div.children[0]
 }
 
-function createDoubanLink(title) {
-  return createElementByReact(<div><a href={`https://book.douban.com/subject_search?search_text=${encodeURIComponent(title)}`} target="_blank">到豆瓣看大家对 {title} 的评价</a></div>)
+function createDoubanLink(title, url = `https://book.douban.com/subject_search?search_text=${encodeURIComponent(title)}`) {
+  return createElementByReact(<div><a href={url} target="_blank">到豆瓣看大家对 {title} 的评价</a></div>)
 }
 
 function createAmazonLink(title) {
@@ -326,9 +322,16 @@ function singleHandler([, id]) {
         , day = `0${time.getDate()}`.substr(-2)
         , info = createInfoElement(`于${year}-${month}-${day}为最低价 ¥ ${price}`)
       parentElement.appendChild(info)
-      parentElement.appendChild(createDoubanLink(title))
+
       parentElement.appendChild(createAmazonLink(title))
-      getBookInfoByDuokanApiPromise(id).then(log())
+      getBookInfoByDuokanApiPromise(id)
+      .then(({title, authors, translators, publisher}) => {title, authors, translators, publisher})
+      .then(log())
+      .then(searchBookByDoubanApiPromise)
+      .then(book => {
+        parentElement.appendChild(createDoubanLink(title, book.alt))
+        log('duoban')(book)
+      })
       parentElement[KEY] = true
     })
     .catch(errorHandler)

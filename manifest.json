@@ -18,6 +18,7 @@
   }],
 
   "permissions": [
-    "http://www.duokan.com/"
+    "http://www.duokan.com/",
+    "https://api.douban.com/"
   ]
 }
