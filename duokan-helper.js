@@ -89,7 +89,7 @@
 	var NAME = 'duokan-helper';
 	var API = 'http://127.0.0.1:8080';
 	var VERSION = 'v1';
-	var BASEPATH = "${API}/{$VERSION}";
+	var BASEPATH = API + '/' + VERSION;
 	var KEY = Symbol(NAME);
 
 	var PASS = function PASS() {};

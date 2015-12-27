@@ -12,7 +12,7 @@ import leven from 'leven'
 const NAME = 'duokan-helper'
 const API = 'http://127.0.0.1:8080'
 const VERSION = 'v1'
-const BASEPATH = "${API}/{$VERSION}"
+const BASEPATH = `${API}/${VERSION}`
 const KEY = Symbol(NAME)
 
 const PASS = () => {}
