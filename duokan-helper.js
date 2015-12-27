@@ -133,15 +133,11 @@
 	    var _this = _possibleConstructorReturn(this, Object.getPrototypeOf(BookItem).call(this, props));
 
 	    _this.mouseLeaveHandler = function () {
-	      _this.setState({
-	        hover: false
-	      });
+	      _this.setState({ hover: false });
 	    };
 
 	    _this.mouseEnterHandler = function () {
-	      _this.setState({
-	        hover: true
-	      });
+	      _this.setState({ hover: true });
 	    };
 
 	    _this.render = function () {
@@ -152,25 +148,12 @@
 	      var KEY = book.sid;
 	      return _react2.default.createElement(
 	        'li',
-	        { className: li_class,
-	          onMouseLeave: _this.mouseLeaveHandler,
-	          onMouseEnter: _this.mouseEnterHandler },
+	        { className: li_class, onMouseLeave: _this.mouseLeaveHandler, onMouseEnter: _this.mouseEnterHandler },
 	        _react2.default.createElement(
 	          'a',
-	          { className: 'book',
-	            href: book.url,
-	            hidefocus: 'hidefocus' },
-	          _react2.default.createElement('img', { src: book.cover,
-	            ondragstart: 'return false;',
-	            oncontextmenu: 'return false;',
-	            onload: 'onLoadImg(this)',
-	            style: {
-	              display: 'block'
-	            }
-	          }),
-	          ' '
+	          { className: 'book', href: book.url, hidefocus: 'hidefocus' },
+	          _react2.default.createElement('img', { src: book.cover, ondragstart: 'return false;', oncontextmenu: 'return false;', onload: 'onLoadImg(this)', style: { display: 'block' } })
 	        ),
-	        ' ',
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'info' },
@@ -179,114 +162,78 @@
 	            { className: 'wrap' },
 	            _react2.default.createElement(
 	              'a',
-	              { href: book.url,
-	                className: 'title',
-	                hidefocus: 'hidefocus' },
-	              ' ',
-	              book.title,
-	              ' '
+	              { href: book.url, className: 'title', hidefocus: 'hidefocus' },
+	              book.title
 	            ),
-	            ' ',
 	            _react2.default.createElement(
 	              'p',
 	              { className: 'u-author' },
-	              ' ',
 	              _react2.default.createElement(
 	                'span',
 	                null,
-	                ' ',
-	                book.authors,
-	                ' '
+	                book.authors
 	              )
 	            ),
 	            _react2.default.createElement(
 	              'div',
 	              { className: 'u-price' },
-	              ' ',
 	              book.price != 0 ? [_react2.default.createElement(
 	                'em',
 	                { key: id() },
-	                ' ¥',
-	                (+book.price * 1.0).toFixed(2),
-	                ' '
+	                'Â¥ ',
+	                (+book.price * 1.0).toFixed(2)
 	              ), !!book.new_price && _react2.default.createElement(
 	                'del',
 	                { key: id() },
-	                ' ¥',
-	                (+book.old_price * 1.0).toFixed(2),
-	                ' '
+	                'Â¥ ',
+	                (+book.old_price * 1.0).toFixed(2)
 	              )].filter(function (n) {
 	                return n !== true;
 	              }) : _react2.default.createElement(
 	                'b',
 	                { key: id() },
-	                ' 免费 '
-	              ),
-	              ' '
-	            ),
-	            ' '
+	                '免费'
+	              )
+	            )
 	          ),
-	          ' ',
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'act' },
-	            ' ',
 	            book.price != 0 ? !!book.paid ? _react2.default.createElement(
 	              'span',
 	              { key: id() },
-	              ' 已购买 ',
-	              _react2.default.createElement(
-	                'b',
-	                { className: 'l' },
-	                ' '
-	              ),
+	              'å·²è´­ä¹°',
+	              _react2.default.createElement('b', { className: 'l' }),
 	              _react2.default.createElement('b', { className: 'r' })
 	            ) : !!book.carted ? _react2.default.createElement(
 	              'span',
 	              { key: id() },
-	              ' 已加入购物车 '
+	              'å·²åŠ å…¥è´­ç‰©è½¦'
 	            ) : undefined : !!book.paid ? _react2.default.createElement(
 	              'span',
 	              { key: id() },
-	              ' 已领取 '
+	              '已领取'
 	            ) : _react2.default.createElement(
 	              'a',
-	              { key: id(),
-	                href: '<%= book.url %>',
-	                hidefocus: 'hidefocus' },
-	              ' 去领取 '
-	            ),
-	            ' ',
-	            ' '
-	          ),
-	          ' '
+	              { key: id(), href: '<%= book.url %>', hidefocus: 'hidefocus' },
+	              '去领取'
+	            )
+	          )
 	        ),
-	        ' ',
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'mask j-mask' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'u-mask1' },
-	            ' '
-	          ),
-	          ' ',
+	          _react2.default.createElement('div', { className: 'u-mask1' }),
 	          _react2.default.createElement(
 	            'a',
-	            { className: 'show j-restore',
-	              href: 'javascript:void(0)',
-	              hidefocus: 'hidefocus' },
-	            ' 恢复收藏 '
-	          ),
-	          ' '
-	        ),
-	        ' '
+	            { className: 'show j-restore', href: 'javascript:void(0)', hidefocus: 'hidefocus' },
+	            '恢复收藏'
+	          )
+	        )
 	      );
 	    };
 
-	    _this.state = {
-	      hover: false
-	    };
+	    _this.state = { hover: false };
 	    return _this;
 	  }
 
@@ -457,16 +404,14 @@
 	  var url = arguments.length <= 1 || arguments[1] === undefined ? 'https://book.douban.com/subject_search?search_text=' + encodeURIComponent(title) : arguments[1];
 
 	  return createElementByReact(_react2.default.createElement(
-	    'div',
+	    'diV',
 	    null,
-	    ' ',
 	    _react2.default.createElement(
 	      'a',
-	      { href: url,
-	        target: '_blank' },
-	      ' 到豆瓣看大家对 ',
+	      { href: url, target: '_blank' },
+	      '到豆瓣看大家对 ',
 	      title,
-	      '的评价 '
+	      ' 的评价'
 	    )
 	  ));
 	}
@@ -475,9 +420,8 @@
 	  return createElementByReact(_react2.default.createElement(
 	    'span',
 	    null,
-	    ' 豆瓣评分: ',
-	    rating,
-	    ' '
+	    '豆瓣评分: ',
+	    rating
 	  ));
 	}
 
@@ -485,14 +429,12 @@
 	  return createElementByReact(_react2.default.createElement(
 	    'div',
 	    null,
-	    ' ',
 	    _react2.default.createElement(
 	      'a',
-	      { href: 'http://www.amazon.cn/s/' + encodeURIComponent(title),
-	        target: '_blank' },
-	      ' 到亚马逊购买 ',
+	      { href: 'http://www.amazon.cn/s/' + encodeURIComponent(title), target: '_blank' },
+	      '到亚马逊购买 ',
 	      title,
-	      '的实体书 '
+	      ' 的实体书'
 	    )
 	  ));
 	}
@@ -525,9 +467,7 @@
 	  }
 	  var pathname = pathname2Array(a.pathname),
 	      id = pathname[1];
-	  return {
-	    id: id, a: a
-	  };
+	  return { id: id, a: a };
 	}
 
 	function commonHandler() {
@@ -578,9 +518,7 @@
 	      var authors = _ref10.authors;
 	      var translators = _ref10.translators;
 	      var rights = _ref10.rights;
-	      return {
-	        title: title, authors: authors, translators: translators, publisher: rights
-	      };
+	      return { title: title, authors: authors, translators: translators, publisher: rights };
 	    }).then(searchBookByDoubanApiPromise).then(function (book) {
 	      parentElement.appendChild(createDoubanLink(title, book.alt));
 	      parentElement.appendChild(createDoubanRating(book.rating.average));
@@ -632,8 +570,7 @@
 	        book.price = book.new_price;
 	      }
 	      var div = document.createElement('div');
-	      _reactDom2.default.render(_react2.default.createElement(BookItem, { book: book
-	      }), div);
+	      _reactDom2.default.render(_react2.default.createElement(BookItem, { book: book }), div);
 	      container.appendChild(div);
 	    }, _lodash2.default.defer)).run();
 	  });
