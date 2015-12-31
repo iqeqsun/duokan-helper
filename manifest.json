@@ -18,8 +18,13 @@
     "run_ad": "document_end"
   }],
 
+  "background": {
+    "script": ["background.js"]
+  },
+
   "permissions": [
     "http://www.duokan.com/",
-    "https://api.douban.com/"
+    "https://api.douban.com/",
+    "webNavigation"
   ]
 }

@@ -1,10 +1,12 @@
 var webpack = require('webpack')
 
 module.exports = {
-  entry: './duokan-helper.es',
+  entry: {
+    'duokan-helper': './duokan-helper.es'
+  },
   output: {
     path: __dirname,
-    filename: 'duokan-helper.js'
+    filename: '[name].js'
   },
   module: {
     loaders: [{
@@ -17,7 +19,7 @@ module.exports = {
     }]
   },
   plugins: [
-    //new webpack.optimize.UglifyJsPlugin()
+    new webpack.optimize.UglifyJsPlugin(),
     new webpack.ProvidePlugin({
       'fetch': 'imports?this=>global!exports?global.fetch!whatwg-fetch'
     })
