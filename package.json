@@ -6,12 +6,13 @@
   "dependencies": {
     "babel-polyfill": "^6.2.0",
     "classnames": "^2.2.0",
+    "exports-loader": "^0.6.2",
+    "imports-loader": "^0.6.5",
     "leven": "^2.0.0",
     "lodash": "^3.10.1",
-    "qwest": "^2.2.3",
     "react": "^0.14.3",
     "react-dom": "^0.14.3",
-    "reqwest": "^2.0.5"
+    "whatwg-fetch": "^0.10.1"
   },
   "devDependencies": {
     "babel-core": "^6.1.21",

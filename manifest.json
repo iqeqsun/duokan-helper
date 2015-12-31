@@ -1,10 +1,11 @@
 {
   "manifest_version": 2,
+  "name": "多看助手",
+  "version": "1.0.1",
 
-  "name": "多看小助手",
-  "description": "显示多看阅读书籍的历史最低价格和豆瓣评分.",
-  "version": "1.0.0",
+  "author": "BlackGlory <woshenmedoubuzhidao@blackglory.me",
 
+  "description": "本扩展致力于提升多看阅读Web端的用户体验, 例如显示书籍的历史最低价格和显示书籍的豆瓣评分.",
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",

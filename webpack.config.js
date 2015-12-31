@@ -9,7 +9,7 @@ module.exports = {
   module: {
     loaders: [{
       test: /\.es$/,
-      exclude: /(node_modules|bower_components)/,
+      exclude: /node_modules/,
       loader: 'babel',
       query: {
         presets: ['es2015', 'stage-0', 'react']
@@ -18,5 +18,8 @@ module.exports = {
   },
   plugins: [
     //new webpack.optimize.UglifyJsPlugin()
+    new webpack.ProvidePlugin({
+      'fetch': 'imports?this=>global!exports?global.fetch!whatwg-fetch'
+    })
   ]
 }

@@ -2,15 +2,13 @@
 
 import 'babel-polyfill'
 import _ from 'lodash'
-import qwest from 'qwest'
 import React from 'react'
-import reqwest from 'reqwest'
 import ReactDOM from 'react-dom'
 import classNames from 'classnames'
 import leven from 'leven'
 
 const NAME = 'duokan-helper'
-const API = 'http://127.0.0.1:8080'
+const API = 'http://duokan.blackglory.me'
 const VERSION = 'v1'
 const BASEPATH = `${API}/${VERSION}`
 const KEY = Symbol(NAME)
@@ -73,13 +71,6 @@ class BookItem extends React.Component {
                   <span key={id()}>å·²è´­ä¹°<b className="l"></b><b className="r"></b></span>
                 } else if (!!book.carted) {
                   <span key={id()}>å·²åŠ å…¥è´­ç‰©è½¦</span>
-                } else {
-                  /*
-                  [
-                    <a key={id()} href="javascript:void(0)" className="j-cart" hidefocus="hidefocus">åŠ å…¥è´­ç‰©è½¦</a>,
-                    <span key={id()} style={{display: 'none'}}>å·²åŠ å…¥è´­ç‰©è½¦</span>
-                  ]
-                  */
                 }
               } else {
                 if (!!book.paid) {
@@ -89,7 +80,6 @@ class BookItem extends React.Component {
                 }
               }
             }}
-            { /*<span className="u-sep">|</span><a className="j-delete delete" href="javascript:void(0);" hidefocus="hidefocus">取消收藏</a>*/ }
           </div>
         </div>
         <div className="mask j-mask">
@@ -101,16 +91,34 @@ class BookItem extends React.Component {
   }
 }
 
+function status(response) {
+  if (response.status >= 200 && response.status) {
+    return Promise.resolve(response)
+  } else {
+    return Promise.reject(new Error(response.statusText))
+  }
+}
+
+function json(response) {
+  return response.json()
+}
+
+function serialize(obj) {
+  return _.map(_.keys(obj), key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&')
+}
+
 function pathname2Array(s) {
   return _.rest(s.split('/'))
 }
 
-function errorHandler() {
-  console.error(arugments)
+function errorHandler(err) {
+  throw err
 }
 
 function getBookPromise(id) {
-  return qwest.get(`${BASEPATH}/book/${id}`)
+  return fetch(`${BASEPATH}/book/${id}`)
+    .then(status)
+    .then(json)
     .catch(errorHandler)
 }
 
@@ -125,7 +133,7 @@ function log(title = null) {
     if(title === null) {
       return console.log.bind(console)
     }
-    return(obj) => {
+    return (obj) => {
       if(_.isString(obj)) {
         console.log(`${title}: ${obj}`)
       } else {
@@ -162,35 +170,37 @@ function getCookie(name) {
 
 function getFavsPromise(start = 0, count = 10) {
   let _t = parseInt(new Date().getTime() / 1e3),
-    _c = `${getCookie('device_id')}&${_t}`.split('').reduce((t, n) => (131 *
-      t + n.charCodeAt(0)) % 65536, 0)
+    _c = `${getCookie('device_id')}&${_t}`.split('').reduce((t, n) => (131 * t + n.charCodeAt(0)) % 65536, 0)
   return new Promise((resolve, reject) => {
-    qwest.post('http://www.duokan.com/discover/user/fav/list_favs', {
+    fetch('http://www.duokan.com/discover/user/fav/list_favs', {
+      method: 'post',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      },
+      credentials: 'include',
+      body: serialize({
         type: 0,
         start,
         count,
         _t,
         _c
       })
-      .then((xhr, response) => {
-        try {
-          resolve(JSON.parse(response))
-        } catch(e) {
-          log(e)(response)
-          reject(e)
-        }
-      })
-      .catch(reject)
+    })
+    .then(status)
+    .then(json)
+    .then(resolve)
+    .catch(reject)
   })
 }
 
 function getBookInfoByDuokanApiPromise(id) {
   return new Promise((resolve, reject) => {
-    qwest.get(
-        `http://www.duokan.com/hs/v0/android/store/book/${encodeURIComponent(id)}`
-      )
-      .then((xhr, response) => resolve(response.item))
-      .catch(reject)
+    fetch(`http://www.duokan.com/hs/v0/android/store/book/${encodeURIComponent(id)}`)
+    .then(status)
+    .then(json)
+    .then(({item}) => item)
+    .then(resolve)
+    .catch(reject)
   })
 }
 
@@ -198,59 +208,47 @@ function searchBookByDoubanApiPromise({
   title, authors = '', translators = '', publisher = ''
 }) {
   return new Promise((resolve, reject) => {
-    reqwest({
-        url: `https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`,
-        type: 'json'
-      }).then(({
-        books
-      }) => {
-        let book = _(books).each(book => {
-            let levenOfTitle = leven(title, book.title),
-              levenOfAuthor = leven(authors, book.author.join('，')),
-              levenOfTranslator = leven(translators, book.translator.join(
-                '，')),
-              levenOfPublisher = leven(publisher, book.publisher)
-            book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 +
-              levenOfTranslator * 5
-          })
-          .min('levenValue');
-        (book ? resolve : reject)(book)
-      })
-      .catch(reject)
+    fetch(`https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`)
+    .then(status)
+    .then(json)
+    .then(({books}) => {
+      let book = _(books).each(book => {
+          let levenOfTitle = leven(title, book.title),
+            levenOfAuthor = leven(authors, book.author.join('，')),
+            levenOfTranslator = leven(translators, book.translator.join(
+              '，')),
+            levenOfPublisher = leven(publisher, book.publisher)
+          book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 +
+            levenOfTranslator * 5
+        })
+        .min('levenValue');
+      (book ? resolve : reject)(book)
+    })
+    .catch(reject)
   })
 }
 
 function getWishPromise() {
   return new Promise((resolve, reject) => {
     getFavsPromise()
-      .then(({
-        total
-      }) => {
-        let count = 30,
-          ps = []
-        for(let i = 0; i < total; i += count) {
-          ps.push(getFavsPromise(i, count))
-        }
-        return ps
-      })
-      .then(ps => Promise.all(ps))
-      .then(data =>
-        _(data)
-        .map(({
-          data
-        }) => data)
-        .flatten()
-        .value()
-      )
-      .then(books => {
-        let t = _.map(books, ({
-          source_id
-        }) => getBookInfoByDuokanApiPromise(source_id))
-        return t
-      })
-      .then(ps => Promise.all(ps))
-      .then(resolve)
-      .catch(reject)
+    .then(({total}) => {
+      let count = 30,
+        ps = []
+      for(let i = 0; i < total; i += count) {
+        ps.push(getFavsPromise(i, count))
+      }
+      return ps
+    })
+    .then(ps => Promise.all(ps))
+    .then(data => _(data)
+      .map(({data}) => data)
+      .flatten()
+      .value()
+    )
+    .then(books => _.map(books, ({source_id}) => getBookInfoByDuokanApiPromise(source_id)))
+    .then(ps => Promise.all(ps))
+    .then(resolve)
+    .catch(reject)
   })
 }
 
@@ -269,7 +267,7 @@ function createDoubanRating(rating) {
 }
 
 function createAmazonLink(title) {
-  return createElementByReact(<div><a href={`http://www.amazon.cn/s/${encodeURIComponent(title)}`} target="_blank">到亚马逊购买 {title} 的实体书</a></div>)
+  return createElementByReact(<div><a href={`http://www.amazon.cn/s/${encodeURIComponent(title)}`} target="_blank">到亚马逊找 {title} 的实体书/电子书</a></div>)
 }
 
 function aElementsHandler(elements) {
@@ -279,20 +277,20 @@ function aElementsHandler(elements) {
   let obj = _.map(elements, getIdFromA),
     ids = _.pluck(obj, 'id'),
     as = _.pluck(obj, 'a')
-  getBookPromise(ids.join(',')).then((xhr, books) => {
-      for(let i in books) {
-        if(books[i] === null) {
-          continue
-        }
-        let min_price = books[i]['Min'].toFixed(2),
-          info = createInfoElement(`历史最低: ¥ ${min_price}`),
-          a = as[i]
-        a.parentElement.style.overflow = 'visible'
-        a.parentElement.appendChild(info)
-        a.parentElement[KEY] = true
+  getBookPromise(ids.join(',')).then(books => {
+    for(let i in books) {
+      if(books[i] === null) {
+        continue
       }
-    })
-    .catch(errorHandler)
+      let min_price = books[i]['Min'].toFixed(2),
+        info = createInfoElement(`历史最低: ¥ ${min_price}`),
+        a = as[i]
+      a.parentElement.style.overflow = 'visible'
+      a.parentElement.appendChild(info)
+      a.parentElement[KEY] = true
+    }
+  })
+  .catch(errorHandler)
 }
 
 function getIdFromA(a) {
@@ -309,21 +307,21 @@ function commonHandler() {
       getIdFromA),
     ids = _.pluck(obj, 'id'),
     as = _.pluck(obj, 'a')
-  getBookPromise(ids.join(',')).then((xhr, books) => {
-      for(let i in books) {
-        let min_price = books[i]['Min'].toFixed(2),
-          info = createInfoElement(`历史最低: ¥ ${min_price}`),
-          a = as[i]
-        a.parentElement.style.overflow = 'visible'
-        a.parentElement.appendChild(info)
-        a.parentElement[KEY] = true
-      }
-    })
-    .catch(errorHandler)
+  getBookPromise(ids.join(',')).then(books => {
+    for(let i in books) {
+      let min_price = books[i]['Min'].toFixed(2),
+        info = createInfoElement(`历史最低: ¥ ${min_price}`),
+        a = as[i]
+      a.parentElement.style.overflow = 'visible'
+      a.parentElement.appendChild(info)
+      a.parentElement[KEY] = true
+    }
+  })
+  .catch(errorHandler)
 }
 
 function singleHandler([, id]) {
-  getBookPromise(id).then((xhr, [data]) => {
+  getBookPromise(id).then(([data]) => {
     let timeline = data.Timeline,
       title = data.Title,
       id = data.Id,
@@ -337,7 +335,7 @@ function singleHandler([, id]) {
       year = time.getFullYear(),
       month = `0${time.getMonth() + 1}`.substr(-2),
       day = `0${time.getDate()}`.substr(-2),
-      info = createInfoElement(`于${year}-${month}-${day}为最低价 ¥ ${price}`)
+      info = createInfoElement(`历史最低价为 ¥ ${price} (${year}-${month}-${day})`)
     parentElement.appendChild(info)
 
     parentElement.appendChild(createAmazonLink(title))
