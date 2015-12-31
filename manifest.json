@@ -5,7 +5,7 @@
 
   "author": "BlackGlory <woshenmedoubuzhidao@blackglory.me",
 
-  "description": "本扩展致力于提升多看阅读Web端的用户体验, 例如显示书籍的历史最低价格和显示书籍的豆瓣评分.",
+  "description": "该扩展致力于为Chrome用户提供增强多看阅读Web端用户体验的功能, 显示书籍的历史最低价格和豆瓣评分只是扩展功能的一小部分.",
   "icons": {
     "16": "images/icon16.png",
     "48": "images/icon48.png",
