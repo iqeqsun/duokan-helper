@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "多看助手",
-  "version": "1.0.1",
+  "version": "1.0.2",
 
   "author": "BlackGlory <woshenmedoubuzhidao@blackglory.me",
 
@@ -24,7 +24,6 @@
 
   "permissions": [
     "http://www.duokan.com/",
-    "https://api.douban.com/",
-    "webNavigation"
+    "https://api.douban.com/"
   ]
 }
