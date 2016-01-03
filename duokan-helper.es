@@ -470,8 +470,6 @@ function favouriteHandler() {
     Promise.resolve((() => {
       let error_title_books = document.querySelectorAll('a.title[href^="javascript:"]')
         , fav_titles = fav.map(book => book.title)
-      log('error_title')(error_title_books)
-      log('fav')(fav)
       _.each(error_title_books, a => {
         let title = a.textContent
           , index = _.findIndex(fav, fav_book => title === fav_book.title)
