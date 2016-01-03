@@ -123,7 +123,7 @@ class OptionForm extends React.Component {
       let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
         , isGreen = !!bookitem.querySelector('[data-color="green"]')
         , isBlue = !isGreen && !!bookitem.querySelector('[data-color="blue"]')
-        , isYellow = !isGreen && isBlue
+        , isYellow = !isGreen && !isBlue
         , display = 'block'
       if (isGreen && !this.state.showGreen) {
         display = 'none'
