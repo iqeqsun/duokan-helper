@@ -13,6 +13,12 @@ const VERSION = 'v1'
 const BASEPATH = `${API}/${VERSION}`
 const KEY = Symbol(NAME)
 
+const MDC = {
+  BLUE: '#2196F3',
+  GREEN: '#4CAF50',
+  YELLOW: '#FFEB3B'
+}
+
 const PASS = () => {}
 
 const id = (() => {
@@ -40,11 +46,9 @@ class BookItem extends React.Component {
   }
 
   render = () => {
-    let li_class = classNames('u-bookitm1', 'u-bookitm1-1', {
-      'u-bookitm1-hover': this.state.hover
-    })
-    let book = this.props.book
-    const KEY = book.sid
+    let li_class = classNames('u-bookitm1', 'u-bookitm1-1', {'u-bookitm1-hover': this.state.hover})
+      , book = this.props.book
+    const KEY = book.id
     return (
       <li className={li_class} onMouseLeave={this.mouseLeaveHandler} onMouseEnter={this.mouseEnterHandler}>
         <a className="book" href={ book.url } hidefocus="hidefocus">
@@ -98,17 +102,13 @@ class OptionForm extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      showBlue: true,
-      showGreen: true,
-      showOwned: false
+      showYellow: true
+    , showBlue: true
+    , showGreen: true
+    , showOwned: false
     }
     this.updateDOM()
   }
-  /*
-  statics = {
-    updateDOM: this.updateDOM
-  }
-  */
 
   checkboxChangeHandler = (field, e) => {
     let nextState = {}
@@ -123,10 +123,13 @@ class OptionForm extends React.Component {
       let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
         , isGreen = !!bookitem.querySelector('[data-color="green"]')
         , isBlue = !isGreen && !!bookitem.querySelector('[data-color="blue"]')
+        , isYellow = !isGreen && isBlue
         , display = 'block'
       if (isGreen && !this.state.showGreen) {
         display = 'none'
       } else if (isBlue && !this.state.showBlue) {
+        display = 'none'
+      } else if (isYellow && !this.state.showYellow) {
         display = 'none'
       }
       if (isOwned && !this.state.showOwned) {
@@ -139,10 +142,12 @@ class OptionForm extends React.Component {
   render = () => {
     return (
       <form>
+        <input id="showYellow" type="checkbox" checked={this.state.showYellow} onChange={this.checkboxChangeHandler.bind(this, 'showYellow')} />
+        <label style={{color: MDC.YELLOW}} htmlFor="showYellow">显示当前高于最低价格的书</label><br />
         <input id="showBlue" type="checkbox" checked={this.state.showBlue} onChange={this.checkboxChangeHandler.bind(this, 'showBlue')} />
-        <label style={{color: '#03A9F4'}} htmlFor="showBlue">显示当前与最低价格持平的书</label><br />
+        <label style={{color: MDC.BLUE}} htmlFor="showBlue">显示当前与最低价格持平的书</label><br />
         <input id="showGreen" type="checkbox" checked={this.state.showGreen} onChange={this.checkboxChangeHandler.bind(this, 'showGreen')} />
-        <label style={{color: '#8BC34A'}} htmlFor="showGreen">显示当前低于最低价格的书</label><br />
+        <label style={{color: MDC.GREEN}} htmlFor="showGreen">显示当前低于最低价格的书</label><br />
         <input id="showOwned" type="checkbox" checked={this.state.showOwned} onChange={this.checkboxChangeHandler.bind(this, 'showOwned')} />
         <label htmlFor="showOwned">显示已购书籍</label><br />
       </form>
@@ -183,11 +188,11 @@ function getBookPromise(id) {
 
 function createInfoElement(text, styles = {color: 'inherit'}) {
   let color = styles.color
-  if (styles.color === 'green') {
-    styles['color'] = '#8BC34A' // Material Design Light Green
-  } else if (styles.color === 'blue') {
-    styles['color'] = '#03A9F4' // Material Design Light Blue
-  }
+  styles['color'] = ({
+    'green': MDC.GREEN
+  , 'blue': MDC.BLUE
+  , 'yellow': MDC.YELLOW
+  })[color] || styles['color']
   return createElementByReact(<i data-color={color} style={styles}>{text}</i>)
 }
 
@@ -218,9 +223,9 @@ function aElementsHandler(elements) {
     if(elements.length === 0) {
       return
     }
-    let obj = _.map(elements, getIdFromA),
-      ids = _.pluck(obj, 'id'),
-      as = _.pluck(obj, 'a')
+    let obj = _.map(elements, getIdFromA)
+      , ids = _.pluck(obj, 'id')
+      , as = _.pluck(obj, 'a')
     getBookPromise(ids.join(',')).then(books => {
       for(let i in books) {
         if(books[i] === null) {
@@ -236,6 +241,8 @@ function aElementsHandler(elements) {
             styles['color'] = 'green'
           } else if (current_price === min_price) {
             styles['color'] = 'blue'
+          } else if (current_price > min_price) {
+            styles['color'] = 'yellow'
           }
           let info = createInfoElement(`历史最低: ¥ ${min_price}`, styles)
           a.parentElement.style.overflow = 'visible'
@@ -253,8 +260,8 @@ function getIdFromA(a) {
   if(a.parentElement[KEY]) {
     return
   }
-  let pathname = pathname2Array(a.pathname),
-    id = pathname[1]
+  let pathname = pathname2Array(a.pathname)
+    , id = pathname[1]
   return {id, a}
 }
 
@@ -289,8 +296,8 @@ function getMinPrice(timelines) {
 }
 
 function getCookie(name) {
-  let value = '; ' + document.cookie,
-    parts = value.split('; ' + name + '=')
+  let value = '; ' + document.cookie
+    , parts = value.split('; ' + name + '=')
   if(parts.length == 2) {
     return parts.pop().split(';').shift();
   }
@@ -387,8 +394,8 @@ function getWishPromise() {
   return new Promise((resolve, reject) => {
     getFavsPromise()
     .then(({total}) => {
-      let count = 30,
-        ps = []
+      let count = 30
+        , ps = []
       for(let i = 0; i < total; i += count) {
         ps.push(getFavsPromise(i, count))
       }
@@ -408,15 +415,14 @@ function getWishPromise() {
 }
 
 function commonHandler() {
-  let obj = _.map(document.querySelectorAll('a.title[href^="/book/"]'),
-      getIdFromA),
-    ids = _.pluck(obj, 'id'),
-    as = _.pluck(obj, 'a')
+  let obj = _.map(document.querySelectorAll('a.title[href^="/book/"]'), getIdFromA)
+    , ids = _.pluck(obj, 'id')
+    , as = _.pluck(obj, 'a')
   getBookPromise(ids.join(',')).then(books => {
     for(let i in books) {
-      let min_price = books[i]['Min'].toFixed(2),
-        info = createInfoElement(`历史最低: ¥ ${min_price}`),
-        a = as[i]
+      let min_price = books[i]['Min'].toFixed(2)
+        , info = createInfoElement(`历史最低: ¥ ${min_price}`)
+        , a = as[i]
       a.parentElement.style.overflow = 'visible'
       a.parentElement.appendChild(info)
       a.parentElement[KEY] = true
@@ -427,20 +433,20 @@ function commonHandler() {
 
 function singleHandler([, id]) {
   getBookPromise(id).then(([data]) => {
-    let timeline = data.Timeline,
-      title = data.Title,
-      id = data.Id,
-      parentElement = document.querySelector('.price')
+    let timeline = data.Timeline
+      , title = data.Title
+      , id = data.Id
+      , parentElement = document.querySelector('.price')
     if(parentElement[KEY]) {
       return
     }
-    let min = getMinTimeline(timeline),
-      price = min.Price.toFixed(2),
-      time = new Date(min.Timestamp * 1000),
-      year = time.getFullYear(),
-      month = `0${time.getMonth() + 1}`.substr(-2),
-      day = `0${time.getDate()}`.substr(-2),
-      info = createInfoElement(`历史最低价为 ¥ ${price} (${year}-${month}-${day})`)
+    let min = getMinTimeline(timeline)
+      , price = min.Price.toFixed(2)
+      , time = new Date(min.Timestamp * 1000)
+      , year = time.getFullYear()
+      , month = `0${time.getMonth() + 1}`.substr(-2)
+      , day = `0${time.getDate()}`.substr(-2)
+      , info = createInfoElement(`历史最低价为 ¥ ${price} (${year}-${month}-${day})`)
     parentElement.appendChild(info)
 
     parentElement.appendChild(createAmazonLink(title))
@@ -458,20 +464,37 @@ function singleHandler([, id]) {
 
 function favouriteHandler() {
   let option_form = insertOptionForm()
+    , local = JSON.parse(localStorage.getItem('local'))
+    , fav = local.fav.list
   addBookElementObserver((as) => {
-    aElementsHandler(as)
+    Promise.resolve((() => {
+      let error_title_books = document.querySelectorAll('a.title[href^="javascript:"]')
+        , fav_titles = fav.map(book => book.title)
+      log('error_title')(error_title_books)
+      log('fav')(fav)
+      _.each(error_title_books, a => {
+        let title = a.textContent
+          , index = _.findIndex(fav, fav_book => title === fav_book.title)
+          , book = fav[index]
+        if (index >= 0) {
+          a.href = `/book/${book.id}`
+        }
+      })
+      return error_title_books
+    })())
+    .then(_.toArray)
+    .then((error_books) => _(as).concat(error_books).value())
+    .then(aElementsHandler)
     .then(() => setTimeout(option_form.updateDOM, 0))
     .catch(errorHandler)
   })
   getWishPromise().then((books) => {
-    let container = document.querySelector('.j-container'),
-      local = JSON.parse(localStorage.getItem('local')),
-      paid = local.paidList,
-      paid_ids = paid.map(book => book.id),
-      fav = local.fav.list,
-      fav_ids = fav.map(book => book.id),
-      carted = local.cart,
-      carted_ids = carted.map(book => book.id)
+    let container = document.querySelector('.j-container')
+      , paid = local.paidList
+      , paid_ids = paid.map(book => book.id)
+      , fav_ids = fav.map(book => book.id)
+      , carted = local.cart
+      , carted_ids = carted.map(book => book.id)
     _(books)
     .filter((book) => !_.include(fav_ids, book.book_id))
     .each(_.wrap(book => {
@@ -503,13 +526,13 @@ function injectScript() {
 }
 
 !function main() {
-  let pathname = pathname2Array(new URL(document.URL).pathname),
-    handler = {
-      book: singleHandler, // 单页
-      favourite: favouriteHandler, // 收藏
-      special: commonHandler, // 专题
-      r: commonHandler, // 畅销榜
-      list: commonHandler // 分类
+  let pathname = pathname2Array(new URL(document.URL).pathname)
+    , handler = {
+      book: singleHandler // 单页
+    , favourite: favouriteHandler // 收藏
+    , special: commonHandler // 专题
+    , r: commonHandler // 畅销榜
+    , list: commonHandler // 分类
     }
 
   if(_.first(pathname) === 'u') {
