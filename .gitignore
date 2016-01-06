@@ -1,3 +1,4 @@
 node_modules/
 *.zip
-*.js
+duokan-helper.js
+background.js

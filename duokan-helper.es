@@ -6,6 +6,9 @@ import React from 'react'
 import ReactDOM from 'react-dom'
 import classNames from 'classnames'
 import leven from 'leven'
+import ChromePromise from 'chrome-promise'
+
+const chrome = new ChromePromise()
 
 const NAME = 'duokan-helper'
 const API = 'http://duokan.blackglory.me'
@@ -31,6 +34,9 @@ const id = (() => {
   return () => g.next().value
 })()
 
+let optionFormUpdateDOM = null
+  , fontSelectorUpdateDOM = null
+
 class BookItem extends React.Component {
   constructor(props) {
     super(props)
@@ -48,7 +54,6 @@ class BookItem extends React.Component {
   render = () => {
     let li_class = classNames('u-bookitm1', 'u-bookitm1-1', {'u-bookitm1-hover': this.state.hover})
       , book = this.props.book
-    const KEY = book.id
     return (
       <li className={li_class} onMouseLeave={this.mouseLeaveHandler} onMouseEnter={this.mouseEnterHandler}>
         <a className="book" href={ book.url } hidefocus="hidefocus">
@@ -107,6 +112,8 @@ class OptionForm extends React.Component {
     , showGreen: true
     , showOwned: false
     }
+    this.updateDOM = this.updateDOM.bind(this)
+    optionFormUpdateDOM = this.updateDOM
     this.updateDOM()
   }
 
@@ -114,10 +121,10 @@ class OptionForm extends React.Component {
     let nextState = {}
     nextState[field] = e.target.checked
     this.setState(nextState)
-    setTimeout(this.updateDOM, 0)
+    _.defer(this.updateDOM)
   }
 
-  updateDOM = () => {
+  updateDOM() {
     let bookitems = document.querySelectorAll('.j-container .u-bookitm1')
     _.each(bookitems, (bookitem) => {
       let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
@@ -153,6 +160,78 @@ class OptionForm extends React.Component {
       </form>
     )
   }
+}
+
+class FontSelector extends React.Component {
+  constructor(props) {
+    super(props)
+    this.defaultFont = fontFamilyDetect(this.props.fontList, document.querySelector('svg > *'))
+    this.state = {
+      font: _.first(this.defaultFont)
+    }
+    this.updateDOM = this.updateDOM.bind(this)
+    fontSelectorUpdateDOM = this.updateDOM
+  }
+
+  inputChangeHandler = (field, e) => {
+    let nextState = {}
+    nextState[field] = e.target.value
+    this.setState(nextState)
+    this.setFont()
+  }
+
+  setFont = () => {
+    _.defer(() => this.updateDOM(document.querySelectorAll('div.text > svg')))
+  }
+
+  updateDOM(svgs) {
+    _(svgs)
+    .map(svg => svg.children)
+    .map(_.toArray)
+    .flatten()
+    .each(e => e.style.fontFamily = `"${this.state.font}", ${this.defaultFont}`)
+    .run()
+  }
+
+  render = () => {
+    let fromStyle = {
+          position: 'absolute'
+        , top: 0
+        , left: 0
+        , zIndex: 999
+        , marginLeft: '1rem'
+        , marginTop: '1rem'
+        }
+      /*
+      , inputStyle = {
+          width: '15rem'
+        }
+      */
+      , labelStyle = {
+        color: 'white'
+      }
+    return (
+      <form style={fromStyle}>
+        <label style={labelStyle}>字体: </label><select value={this.state.font} onChange={this.inputChangeHandler.bind(this, 'font')}>
+        {this.props.fontList.map(font => <option key={id()} value={font.fontId}>{font.displayName}</option>)}
+        </select>
+      </form>
+    )
+    //<input style={inputStyle} type="input" list="fontList" value={this.state.font} onBlur={this.setFont} onChange={this.inputChangeHandler.bind(this, 'font')}/>
+    //<datalist id="fontList">
+    //</datalist>
+  }
+}
+
+function fontFamilyDetect(fontList, e) {
+  let fontIds = _.map(fontList, font => font.fontId)
+    , fontFamily = window.getComputedStyle(e, null).fontFamily.split(',')
+    , font = _(fontFamily)
+        .map(fontName => fontName.trim())
+        .map(fontName => fontName.match(/(['"]?)([\S\s]+)(\1)/)[2])
+        .filter(fontName => fontIds.includes(fontName))
+        .value()
+  return font
 }
 
 function status(response) {
@@ -200,6 +279,14 @@ function createElementByReact(jsx) {
   let div = document.createElement('div')
   ReactDOM.render(jsx, div)
   return div.children[0]
+}
+
+function renderReactElement(jsx, container = 'div') {
+  if (_.isString(container)) {
+    container = document.createElement(container)
+  }
+  ReactDOM.render(jsx, container)
+  return container
 }
 
 function createDoubanLink(title, url = `https://book.douban.com/subject_search?search_text=${encodeURIComponent(title)}`) {
@@ -275,7 +362,7 @@ function log(title = null) {
         console.log(`${title}: ${obj}`)
       } else {
         console.log(`${title}:`)
-        console.log(obj)
+        console.dir(obj)
       }
       return obj
     }
@@ -303,24 +390,40 @@ function getCookie(name) {
   }
 }
 
+function queryMutations(mutations, selector) {
+  return _(mutations)
+    .map(mutation => mutation.addedNodes)
+    .filter(nodes => nodes.length > 0)
+    .map(_.toArray)
+    .flatten()
+    .uniq()
+    .filter(node => node.querySelectorAll)
+    .map(node => _.toArray(node.querySelectorAll(selector)))
+    .flatten()
+    .value()
+}
+
 function addBookElementObserver(callback) {
   new MutationObserver(mutations => {
-    let as = _(mutations)
-      .map(mutation => mutation.addedNodes)
-      .filter(nodes => nodes.length > 0)
-      .map(_.toArray)
-      .flatten()
-      .uniq()
-      .filter(node => node.querySelectorAll)
-      .map(node => _.toArray(node.querySelectorAll('a.title[href^="/book/"]')))
-      .flatten()
-      .value()
+    let as = queryMutations(mutations, 'a.title[href^="/book/"]')
     if (as.length > 0) {
       callback(as)
     }
-  }).observe(document.body, {
-    childList: true,
-    subtree: true
+  }).observe(document.querySelector('.m-favorite .container'), {
+    childList: true
+  , subtree: true
+  })
+}
+
+function addReaderElementObserver(callback) {
+  new MutationObserver(mutations => {
+    let svgs = queryMutations(mutations, 'svg')
+    if (svgs.length > 0) {
+      callback(svgs)
+    }
+  }).observe(document.querySelector('.j-page-container'), {
+    childList: true
+  , subtree: true
   })
 }
 
@@ -362,10 +465,9 @@ function getBookInfoByDuokanApiPromise(id) {
 
 function insertOptionForm() {
   let container = document.querySelector('.u-nav-stacked ul')
-    , li = document.createElement('li')
-    , option_form = ReactDOM.render(<OptionForm />, li)
-  container.appendChild(li)
-  return option_form
+    , optionForm = renderReactElement(<li><OptionForm /></li>)
+  container.appendChild(optionForm)
+  return optionForm
 }
 
 function searchBookByDoubanApiPromise({title, authors = '', translators = '', publisher = ''}) {
@@ -377,8 +479,7 @@ function searchBookByDoubanApiPromise({title, authors = '', translators = '', pu
       let book = _(books).each(book => {
           let levenOfTitle = leven(title, book.title),
             levenOfAuthor = leven(authors, book.author.join('，')),
-            levenOfTranslator = leven(translators, book.translator.join(
-              '，')),
+            levenOfTranslator = leven(translators, book.translator.join('，')),
             levenOfPublisher = leven(publisher, book.publisher)
           book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 +
             levenOfTranslator * 5
@@ -483,7 +584,7 @@ function favouriteHandler() {
     .then(_.toArray)
     .then((error_books) => _(as).concat(error_books).value())
     .then(aElementsHandler)
-    .then(() => setTimeout(option_form.updateDOM, 0))
+    .then(() => _.defer(optionFormUpdateDOM))
     .catch(errorHandler)
   })
   getWishPromise().then((books) => {
@@ -504,12 +605,27 @@ function favouriteHandler() {
         book.old_price = book.price
         book.price = book.new_price
       }
-      let div = document.createElement('div')
-      ReactDOM.render(<BookItem book={book} />, div)
-      container.appendChild(div)
+      container.appendChild(<BookItem book={book} />)
     }, _.defer))
     .run()
-    setTimeout(option_form.updateDOM, 0)
+    _.defer(optionFormUpdateDOM)
+  })
+}
+
+async function readerHandler() {
+  let {fontList} = await chrome.runtime.sendMessage({})
+    , fontSelector = null
+    , createFontSelector = _.once(() => {
+      fontSelector = renderReactElement(<FontSelector fontList={fontList} />)
+      document.body.appendChild(fontSelector)
+    })
+  addReaderElementObserver((svgs) => {
+    if (document.querySelector('svg > *')) {
+      createFontSelector()
+    }
+    if (fontSelectorUpdateDOM) {
+      _.defer(() => fontSelectorUpdateDOM(svgs))
+    }
   })
 }
 
@@ -526,12 +642,13 @@ function injectScript() {
 !function main() {
   let pathname = pathname2Array(new URL(document.URL).pathname)
     , handler = {
-      book: singleHandler // 单页
-    , favourite: favouriteHandler // 收藏
-    , special: commonHandler // 专题
-    , r: commonHandler // 畅销榜
-    , list: commonHandler // 分类
-    }
+        book: singleHandler // 单页
+      , favourite: favouriteHandler // 收藏
+      , special: commonHandler // 专题
+      , r: commonHandler // 畅销榜
+      , list: commonHandler // 分类
+      , reader: readerHandler // 多看阅读器
+      }
 
   if(_.first(pathname) === 'u') {
     pathname.shift()
