@@ -36,6 +36,7 @@ const id = (() => {
 
 let optionFormUpdateDOM = null
   , fontSelectorUpdateDOM = null
+  , backgroundSelectorUpdateDOM = null
 
 class BookItem extends React.Component {
   constructor(props) {
@@ -169,8 +170,7 @@ class FontSelector extends React.Component {
     this.state = {
       font: _.first(this.defaultFont)
     }
-    this.updateDOM = this.updateDOM.bind(this)
-    fontSelectorUpdateDOM = this.updateDOM
+    fontSelectorUpdateDOM = this.setFont
   }
 
   inputChangeHandler = (field, e) => {
@@ -180,11 +180,11 @@ class FontSelector extends React.Component {
     this.setFont()
   }
 
-  setFont = () => {
-    _.defer(() => this.updateDOM(document.querySelectorAll('div.text > svg')))
+  setFont = svgs => {
+    _.defer(() => this.updateDOM(svgs))
   }
 
-  updateDOM(svgs) {
+  updateDOM = (svgs = document.querySelectorAll('div.text > svg')) => {
     _(svgs)
     .map(svg => svg.children)
     .map(_.toArray)
@@ -194,32 +194,79 @@ class FontSelector extends React.Component {
   }
 
   render = () => {
-    let fromStyle = {
-          position: 'absolute'
-        , top: 0
-        , left: 0
-        , zIndex: 999
-        , marginLeft: '1rem'
-        , marginTop: '1rem'
-        }
-      /*
-      , inputStyle = {
-          width: '15rem'
-        }
-      */
-      , labelStyle = {
-        color: 'white'
-      }
     return (
-      <form style={fromStyle}>
-        <label style={labelStyle}>字体: </label><select value={this.state.font} onChange={this.inputChangeHandler.bind(this, 'font')}>
+      <div style={{textAlign: 'start'}}>
+        <label>字体: </label>
+        <select style={{width: '15rem'}} value={this.state.font} onChange={this.inputChangeHandler.bind(this, 'font')}>
         {this.props.fontList.map(font => <option key={id()} value={font.fontId}>{font.displayName}</option>)}
         </select>
+      </div>
+    )
+  }
+}
+
+class BackgroundSelector extends React.Component {
+  getContainer() {
+    return document.querySelector('.j-page-container.j-md-book')
+  }
+
+  getBookPages() {
+    let bookPages = this.getContainer().querySelectorAll('.book_page_wrapper')
+    return bookPages
+  }
+
+  constructor(props) {
+    super(props)
+    this.state = {
+      color: `#${rgb2hex(window.getComputedStyle(this.getContainer(), null).backgroundColor)}`
+    }
+    backgroundSelectorUpdateDOM = this.setBackground
+  }
+
+  inputChangeHandler = (field, e) => {
+    let nextState = {}
+    nextState[field] = e.target.value
+    this.setState(nextState)
+    this.setBackground()
+  }
+
+  setBackground = bookPages => {
+    _.defer(() => this.updateDOM(bookPages))
+  }
+
+  updateDOM = (bookPages = this.getBookPages()) => {
+    _.each(bookPages, e => {e.style.backgroundColor = this.state.color})
+  }
+
+  render = () => {
+    return (
+      <div style={{textAlign: 'start'}}>
+        <label>背景色: </label>
+        <input type="color" value={this.state.color} onChange={this.inputChangeHandler.bind(this, 'color')} />
+      </div>
+    )
+  }
+}
+
+class ReaderOption extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+
+  render = () => {
+    let fromStyle = {
+          position: 'absolute'
+        , top: '1rem'
+        , left: '1rem'
+        , zIndex: 999
+        , color: 'white'
+        }
+    return (
+      <form style={fromStyle}>
+        <BackgroundSelector />
+        <FontSelector fontList={this.props.fontList} />
       </form>
     )
-    //<input style={inputStyle} type="input" list="fontList" value={this.state.font} onBlur={this.setFont} onChange={this.inputChangeHandler.bind(this, 'font')}/>
-    //<datalist id="fontList">
-    //</datalist>
   }
 }
 
@@ -240,6 +287,11 @@ function status(response) {
   } else {
     return Promise.reject(new Error(response.statusText))
   }
+}
+
+function rgb2hex(...rgb) {
+  rgb = rgb.join().match(/\d+/g)
+  return ((rgb[0] << 16) + (rgb[1] << 8) + (+rgb[2])).toString(16)
 }
 
 function json(response) {
@@ -614,17 +666,17 @@ function favouriteHandler() {
 
 async function readerHandler() {
   let {fontList} = await chrome.runtime.sendMessage({})
-    , fontSelector = null
-    , createFontSelector = _.once(() => {
-      fontSelector = renderReactElement(<FontSelector fontList={fontList} />)
-      document.body.appendChild(fontSelector)
+    , insertReaderOption = _.once((container = document.body) => {
+      let readerOption = renderReactElement(<ReaderOption fontList={fontList} />)
+      container.appendChild(readerOption)
     })
   addReaderElementObserver((svgs) => {
     if (document.querySelector('svg > *')) {
-      createFontSelector()
+      insertReaderOption()
     }
     if (fontSelectorUpdateDOM) {
-      _.defer(() => fontSelectorUpdateDOM(svgs))
+      fontSelectorUpdateDOM(svgs)
+      backgroundSelectorUpdateDOM()
     }
   })
 }
