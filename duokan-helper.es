@@ -17,9 +17,16 @@ const BASEPATH = `${API}/${VERSION}`
 const KEY = Symbol(NAME)
 
 const MDC = {
-  BLUE: '#2196F3',
-  GREEN: '#4CAF50',
-  YELLOW: '#FFEB3B'
+  BLUE: '#2196F3'
+, GREEN: '#4CAF50'
+, YELLOW: '#FFEB3B'
+}
+
+const COLOR = {
+  BAD: 'inherit'
+, OKAY: MDC.BLUE
+, AWESOME: MDC.GREEN
+, NONE: 'inherit'
 }
 
 const PASS = () => {}
@@ -108,11 +115,19 @@ class OptionForm extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
+      showAwesome: true
+    , showOkay: true
+    , showBad: true
+    , showOwned: false
+    }
+    /*
+    this.state = {
       showYellow: true
     , showBlue: true
     , showGreen: true
     , showOwned: false
     }
+    */
     this.updateDOM = this.updateDOM.bind(this)
     optionFormUpdateDOM = this.updateDOM
     this.updateDOM()
@@ -129,6 +144,17 @@ class OptionForm extends React.Component {
     let bookitems = document.querySelectorAll('.j-container .u-bookitm1')
     _.each(bookitems, (bookitem) => {
       let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
+        , priceAwesome = !!bookitem.querySelector(`[data-pricerange="{#COLOR.AWESOME}"]`)
+        , priceOkay = !!bookitem.querySelector(`[data-pricerange="{#COLOR.OKAY}"`)
+        , priceBad = !!bookitem.querySelector(`[data-pricerange="{#COLOR.BAD}"`)
+        , display = 'block'
+      if ((priceAwesome && !this.state.showAwesome) ||
+          (priceOkay && !this.state.showOkay) ||
+          (priceBad && !this.state.showBad) ||
+          (isOwned && !this.state.showOwned)) {
+        display = 'none'
+      }
+      /*
         , isGreen = !!bookitem.querySelector('[data-color="green"]')
         , isBlue = !isGreen && !!bookitem.querySelector('[data-color="blue"]')
         , isYellow = !isGreen && !isBlue
@@ -143,6 +169,7 @@ class OptionForm extends React.Component {
       if (isOwned && !this.state.showOwned) {
         display = 'none'
       }
+      */
       bookitem.style.display = display
     })
   }
@@ -150,12 +177,12 @@ class OptionForm extends React.Component {
   render = () => {
     return (
       <form>
-        <input id="showYellow" type="checkbox" checked={this.state.showYellow} onChange={this.checkboxChangeHandler.bind(this, 'showYellow')} />
-        <label style={{color: MDC.YELLOW}} htmlFor="showYellow">显示当前高于最低价格的书</label><br />
-        <input id="showBlue" type="checkbox" checked={this.state.showBlue} onChange={this.checkboxChangeHandler.bind(this, 'showBlue')} />
-        <label style={{color: MDC.BLUE}} htmlFor="showBlue">显示当前与最低价格持平的书</label><br />
-        <input id="showGreen" type="checkbox" checked={this.state.showGreen} onChange={this.checkboxChangeHandler.bind(this, 'showGreen')} />
-        <label style={{color: MDC.GREEN}} htmlFor="showGreen">显示当前低于最低价格的书</label><br />
+        <input id="showBad" type="checkbox" checked={this.state.showBad} onChange={this.checkboxChangeHandler.bind(this, 'showBad')} />
+        <label style={{color: COLOR.BAD}} htmlFor="showYellow">显示高于最低价格的书籍</label><br />
+        <input id="showOkay" type="checkbox" checked={this.state.showOkay} onChange={this.checkboxChangeHandler.bind(this, 'showOkay')} />
+        <label style={{color: COLOR.OKAY}} htmlFor="showBlue">显示与最低价格持平的书籍</label><br />
+        <input id="showAwesome" type="checkbox" checked={this.state.showAwesome} onChange={this.checkboxChangeHandler.bind(this, 'showAwesome')} />
+        <label style={{color: COLOR.AWESOME}} htmlFor="showGreen">显示低于最低价格的书籍</label><br />
         <input id="showOwned" type="checkbox" checked={this.state.showOwned} onChange={this.checkboxChangeHandler.bind(this, 'showOwned')} />
         <label htmlFor="showOwned">显示已购书籍</label><br />
       </form>
@@ -317,14 +344,8 @@ function getBookPromise(id) {
     .catch(errorHandler)
 }
 
-function createInfoElement(text, styles = {color: 'inherit'}) {
-  let color = styles.color
-  styles['color'] = ({
-    'green': MDC.GREEN
-  , 'blue': MDC.BLUE
-  , 'yellow': MDC.YELLOW
-  })[color] || styles['color']
-  return createElementByReact(<i data-color={color} style={styles}>{text}</i>)
+function createInfoElement(text, pricerange = COLOR.NONE) {
+  return createElementByReact(<i data-pricerange={pricerange} style={{color: pricerange}}>{text}</i>)
 }
 
 function createElementByReact(jsx) {
@@ -376,14 +397,15 @@ function aElementsHandler(elements) {
         if (current_price_element) {
           let current_price = Number(_.first(current_price_element.textContent.match(/[\d.]+/)))
             , styles = {fontStyle: 'normal'}
+            , price_range = COLOR.NONE
           if (current_price < min_price) {
-            styles['color'] = 'green'
+            price_range = COLOR.AWESOME
           } else if (current_price === min_price) {
-            styles['color'] = 'blue'
+            price_range = COLOR.OKAY
           } else if (current_price > min_price) {
-            styles['color'] = 'yellow'
+            price_range = COLOR.BAD
           }
-          let info = createInfoElement(`历史最低: ¥ ${min_price}`, styles)
+          let info = createInfoElement(`历史最低: ¥ ${min_price.toFixed(2)}`, price_range)
           a.parentElement.style.overflow = 'visible'
           a.parentElement.appendChild(info)
           a.parentElement[KEY] = true
@@ -592,7 +614,7 @@ function commonHandler() {
   getBookPromise(ids.join(',')).then(books => {
     for(let i in books) {
       let min_price = books[i]['Min'].toFixed(2)
-        , info = createInfoElement(`历史最低: ¥ ${min_price}`)
+        , info = createInfoElement(`历史最低: ¥ ${min_price.toFixed(2)}`)
         , a = as[i]
       a.parentElement.style.overflow = 'visible'
       a.parentElement.appendChild(info)
@@ -617,7 +639,7 @@ function singleHandler([, id]) {
       , year = time.getFullYear()
       , month = `0${time.getMonth() + 1}`.substr(-2)
       , day = `0${time.getDate()}`.substr(-2)
-      , info = createInfoElement(`历史最低价为 ¥ ${price} (${year}-${month}-${day})`)
+      , info = createInfoElement(`历史最低价为 ¥ ${price.toFixed(2)} (${year}-${month}-${day})`)
     parentElement.appendChild(info)
 
     parentElement.appendChild(createAmazonLink(title))
