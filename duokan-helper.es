@@ -4,6 +4,7 @@ import 'babel-polyfill'
 import _ from 'lodash'
 import React from 'react'
 import ReactDOM from 'react-dom'
+import update from 'react-addons-update'
 import classNames from 'classnames'
 import leven from 'leven'
 import ChromePromise from 'chrome-promise'
@@ -53,11 +54,11 @@ class BookItem extends React.Component {
 
   mouseLeaveHandler = () => {
     this.setState({hover: false})
-  }
+  };
 
   mouseEnterHandler = () => {
     this.setState({hover: true})
-  }
+  };
 
   render = () => {
     let li_class = classNames('u-bookitm1', 'u-bookitm1-1', {'u-bookitm1-hover': this.state.hover})
@@ -108,86 +109,135 @@ class BookItem extends React.Component {
         </div>
       </li>
     )
-  }
+  };
 }
 
 class OptionForm extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      showAwesome: true
-    , showOkay: true
-    , showBad: true
-    , showOwned: false
+      show: {
+        awesome: true
+      , okay: true
+      , bad: true
+      , owned: false
+      }
+    , count: {
+        awesome: 0
+      , okay: 0
+      , bad: 0
+      , owned: 0
+      }
     }
-    /*
-    this.state = {
-      showYellow: true
-    , showBlue: true
-    , showGreen: true
-    , showOwned: false
-    }
-    */
     this.updateDOM = this.updateDOM.bind(this)
     optionFormUpdateDOM = this.updateDOM
     this.updateDOM()
   }
 
-  checkboxChangeHandler = (field, e) => {
-    let nextState = {}
-    nextState[field] = e.target.checked
-    this.setState(nextState)
-    _.defer(this.updateDOM)
+  componentDidMount() {
+    this.isReal = true
   }
+
+  componentWillUnmount() {
+    this.isReal = false
+  }
+
+  checkboxChangeHandler = (field, e) => {
+    let fields = field.split('.')
+      , nextState = {}
+    _.reduce(fields, (state, field, i) => {
+      if (!state[field]) {
+        if (i != _.findLastIndex(fields))  {
+          state[field] = {}
+        } else {
+          state[field] = {
+            $set: e.target.checked
+          }
+        }
+      }
+      return state[field]
+    }, nextState)
+    let newState = update(this.state, nextState)
+    this.setState(newState)
+    _.defer(this.updateDOM)
+  };
 
   updateDOM() {
     let bookitems = document.querySelectorAll('.j-container .u-bookitm1')
+      , countAwesome = 0
+      , countOkay = 0
+      , countBad = 0
+      , countOwned = 0
     _.each(bookitems, (bookitem) => {
       let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
-        , priceAwesome = !!bookitem.querySelector(`[data-pricerange="{#COLOR.AWESOME}"]`)
-        , priceOkay = !!bookitem.querySelector(`[data-pricerange="{#COLOR.OKAY}"`)
-        , priceBad = !!bookitem.querySelector(`[data-pricerange="{#COLOR.BAD}"`)
+        , priceAwesome = !!bookitem.querySelector(`[data-pricerange="${COLOR.AWESOME}"]`)
+        , priceOkay = !!bookitem.querySelector(`[data-pricerange="${COLOR.OKAY}"`)
+        , priceBad = !!bookitem.querySelector(`[data-pricerange="${COLOR.BAD}"`)
         , display = 'block'
-      if ((priceAwesome && !this.state.showAwesome) ||
-          (priceOkay && !this.state.showOkay) ||
-          (priceBad && !this.state.showBad) ||
-          (isOwned && !this.state.showOwned)) {
+      if ((priceAwesome && !this.state.show.awesome) ||
+          (priceOkay && !this.state.show.okay) ||
+          (priceBad && !this.state.show.bad)) {
         display = 'none'
       }
-      /*
-        , isGreen = !!bookitem.querySelector('[data-color="green"]')
-        , isBlue = !isGreen && !!bookitem.querySelector('[data-color="blue"]')
-        , isYellow = !isGreen && !isBlue
-        , display = 'block'
-      if (isGreen && !this.state.showGreen) {
-        display = 'none'
-      } else if (isBlue && !this.state.showBlue) {
-        display = 'none'
-      } else if (isYellow && !this.state.showYellow) {
-        display = 'none'
+      if (priceAwesome) {
+        countAwesome++
+      } else if (priceOkay) {
+        countOkay++
+      } else if (priceBad) {
+        countBad++
       }
-      if (isOwned && !this.state.showOwned) {
-        display = 'none'
+      if (isOwned) {
+        countOwned++
+        if (this.state.show.owned) {
+          display = 'block'
+        } else {
+          display = 'none'
+        }
       }
-      */
       bookitem.style.display = display
     })
-  }
+    if (this.isReal) {
+      this.setState(update(this.state, {
+        count: {
+          awesome: {
+            $set: countAwesome
+          }
+        , okay: {
+            $set: countOkay
+          }
+        , bad: {
+            $set: countBad
+          }
+        , owned: {
+            $set: countOwned
+          }
+        }
+      }))
+    }
+  };
 
   render = () => {
     return (
       <form>
-        <input id="showBad" type="checkbox" checked={this.state.showBad} onChange={this.checkboxChangeHandler.bind(this, 'showBad')} />
-        <label style={{color: COLOR.BAD}} htmlFor="showYellow">显示高于最低价格的书籍</label><br />
-        <input id="showOkay" type="checkbox" checked={this.state.showOkay} onChange={this.checkboxChangeHandler.bind(this, 'showOkay')} />
-        <label style={{color: COLOR.OKAY}} htmlFor="showBlue">显示与最低价格持平的书籍</label><br />
-        <input id="showAwesome" type="checkbox" checked={this.state.showAwesome} onChange={this.checkboxChangeHandler.bind(this, 'showAwesome')} />
-        <label style={{color: COLOR.AWESOME}} htmlFor="showGreen">显示低于最低价格的书籍</label><br />
-        <input id="showOwned" type="checkbox" checked={this.state.showOwned} onChange={this.checkboxChangeHandler.bind(this, 'showOwned')} />
-        <label htmlFor="showOwned">显示已购书籍</label><br />
+        <label style={{color: COLOR.BAD}}>
+          <input type="checkbox" checked={this.state.show.bad} onChange={this.checkboxChangeHandler.bind(this, 'show.bad')} />显示高于最低价格的书籍({this.state.count.bad})
+        </label>
+        <br />
+        <label style={{color: COLOR.OKAY}}>
+          <input type="checkbox" checked={this.state.show.okay} onChange={this.checkboxChangeHandler.bind(this, 'show.okay')} />显示与最低价格持平的书籍({this.state.count.okay})
+        </label>
+        <br />
+        <label style={{color: COLOR.AWESOME}}>
+          <input type="checkbox" checked={this.state.show.awesome} onChange={this.checkboxChangeHandler.bind(this, 'show.awesome')} />显示低于最低价格的书籍({this.state.count.awesome})
+        </label>
+        <br />
+        <label>
+          <input type="checkbox" checked={this.state.show.owned} onChange={this.checkboxChangeHandler.bind(this, 'show.owned')} />显示已购书籍({this.state.count.owned})
+        </label>
+        <br />
       </form>
     )
-  }
+  };
 }
 
 class FontSelector extends React.Component {
@@ -205,11 +255,11 @@ class FontSelector extends React.Component {
     nextState[field] = e.target.value
     this.setState(nextState)
     this.setFont()
-  }
+  };
 
   setFont = svgs => {
     _.defer(() => this.updateDOM(svgs))
-  }
+  };
 
   updateDOM = (svgs = document.querySelectorAll('div.text > svg')) => {
     _(svgs)
@@ -218,7 +268,7 @@ class FontSelector extends React.Component {
     .flatten()
     .each(e => e.style.fontFamily = `"${this.state.font}", ${this.defaultFont}`)
     .run()
-  }
+  };
 
   render = () => {
     return (
@@ -229,10 +279,18 @@ class FontSelector extends React.Component {
         </select>
       </div>
     )
-  }
+  };
 }
 
 class BackgroundSelector extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      color: `#${rgb2hex(window.getComputedStyle(this.getContainer(), null).backgroundColor)}`
+    }
+    backgroundSelectorUpdateDOM = this.setBackground
+  }
+
   getContainer() {
     return document.querySelector('.j-page-container.j-md-book')
   }
@@ -242,28 +300,20 @@ class BackgroundSelector extends React.Component {
     return bookPages
   }
 
-  constructor(props) {
-    super(props)
-    this.state = {
-      color: `#${rgb2hex(window.getComputedStyle(this.getContainer(), null).backgroundColor)}`
-    }
-    backgroundSelectorUpdateDOM = this.setBackground
-  }
-
   inputChangeHandler = (field, e) => {
     let nextState = {}
     nextState[field] = e.target.value
     this.setState(nextState)
     this.setBackground()
-  }
+  };
 
   setBackground = bookPages => {
     _.defer(() => this.updateDOM(bookPages))
-  }
+  };
 
   updateDOM = (bookPages = this.getBookPages()) => {
     _.each(bookPages, e => {e.style.backgroundColor = this.state.color})
-  }
+  };
 
   render = () => {
     return (
@@ -272,7 +322,7 @@ class BackgroundSelector extends React.Component {
         <input type="color" value={this.state.color} onChange={this.inputChangeHandler.bind(this, 'color')} />
       </div>
     )
-  }
+  };
 }
 
 class ReaderOption extends React.Component {
@@ -294,7 +344,7 @@ class ReaderOption extends React.Component {
         <FontSelector fontList={this.props.fontList} />
       </form>
     )
-  }
+  };
 }
 
 function fontFamilyDetect(fontList, e) {
@@ -363,19 +413,19 @@ function renderReactElement(jsx, container = 'div') {
 }
 
 function createDoubanLink(title, url = `https://book.douban.com/subject_search?search_text=${encodeURIComponent(title)}`) {
-  return createElementByReact(<diV><a href={url} target="_blank">到豆瓣看大家对 {title} 的评价</a></diV>)
+  return createElementByReact(<diV><a href={url} target="_blank">到豆瓣看 {title} 的评价</a></diV>)
 }
 
 function createDoubanRating(rating) {
   if (rating === '0.0') {
-    return createElementByReact(<span>豆瓣目前无人评价此书</span>)
+    return createElementByReact(<span>豆瓣无人评价此书</span>)
   } else {
     return createElementByReact(<span>豆瓣评分: {rating}</span>)
   }
 }
 
 function createAmazonLink(title) {
-  return createElementByReact(<div><a href={`http://www.amazon.cn/s/${encodeURIComponent(title)}`} target="_blank">到亚马逊找 {title} 的实体书/电子书</a></div>)
+  return createElementByReact(<div><a href={`http://www.amazon.cn/s/${encodeURIComponent(title)}`} target="_blank">到亚马逊找 {title} </a></div>)
 }
 
 function aElementsHandler(elements) {
@@ -393,7 +443,7 @@ function aElementsHandler(elements) {
         }
         let min_price = Number(books[i]['Min'].toFixed(2))
           , a = as[i]
-          , current_price_element = a.parentElement.querySelector('.u-price em')
+          , current_price_element = a.parentElement.querySelector('.u-price')
         if (current_price_element) {
           let current_price = Number(_.first(current_price_element.textContent.match(/[\d.]+/)))
             , styles = {fontStyle: 'normal'}
@@ -614,7 +664,7 @@ function commonHandler() {
   getBookPromise(ids.join(',')).then(books => {
     for(let i in books) {
       let min_price = books[i]['Min'].toFixed(2)
-        , info = createInfoElement(`历史最低: ¥ ${min_price.toFixed(2)}`)
+        , info = createInfoElement(`历史最低: ¥ ${min_price}`)
         , a = as[i]
       a.parentElement.style.overflow = 'visible'
       a.parentElement.appendChild(info)
@@ -639,7 +689,7 @@ function singleHandler([, id]) {
       , year = time.getFullYear()
       , month = `0${time.getMonth() + 1}`.substr(-2)
       , day = `0${time.getDate()}`.substr(-2)
-      , info = createInfoElement(`历史最低价为 ¥ ${price.toFixed(2)} (${year}-${month}-${day})`)
+      , info = createInfoElement(`历史最低: ¥ ${price} (${year}-${month}-${day})`)
     parentElement.appendChild(info)
 
     parentElement.appendChild(createAmazonLink(title))
@@ -744,6 +794,7 @@ function injectScript() {
       , special: commonHandler // 专题
       , r: commonHandler // 畅销榜
       , list: commonHandler // 分类
+      , publisher: commonHandler // 版权方
       , reader: readerHandler // 多看阅读器
       }
 
