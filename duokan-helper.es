@@ -515,6 +515,15 @@ function getBookInfoByDuokanApiPromise(id) {
   })
 }
 
+function getBookInfoByDocumentPromise() {
+  let title = _.trim(document.querySelector('.desc h3').innerText)
+    , isbn = _.trim(document.querySelector('[itemprop="isbn"]').innerText)
+    , authors = _.trim(document.querySelector('[itemprop="author"]').innerText)
+    , rights = _.trim(document.querySelector('[itemprop="copyrightHolder"]').innerText)
+    , translators = _.trim(document.querySelector('[itemprop="translators"]').innerText)
+  return Promise.resolve({title, authors, translators, rights, isbn})
+}
+
 function insertOptionForm() {
   let container = document.querySelector('.u-nav-stacked ul')
     , optionForm = renderReactElement(<li><OptionForm /></li>)
@@ -522,24 +531,33 @@ function insertOptionForm() {
   return optionForm
 }
 
-function searchBookByDoubanApiPromise({title, authors = '', translators = '', publisher = ''}) {
+function searchBookByDoubanApiPromise({title, authors = '', translators = '', publisher = '', isbn = ''}) {
+  console.log(arguments)
   return new Promise((resolve, reject) => {
-    fetch(`https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`)
-    .then(status)
-    .then(json)
-    .then(({books}) => {
-      let book = _(books).each(book => {
-          let levenOfTitle = leven(title, book.title),
-            levenOfAuthor = leven(authors, book.author.join('，')),
-            levenOfTranslator = leven(translators, book.translator.join('，')),
-            levenOfPublisher = leven(publisher, book.publisher)
-          book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 +
-            levenOfTranslator * 5
-        })
-        .min('levenValue');
-      (book ? resolve : reject)(book)
-    })
-    .catch(reject)
+    if (isbn) {
+      return fetch(`https://api.douban.com/v2/book/isbn/${encodeURIComponent(isbn)}`)
+      .then(status)
+      .then(json)
+      .then(resolve)
+    } else if (title) {
+      return fetch(`https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`)
+      .then(status)
+      .then(json)
+      .then(({books}) => {
+        let book = _(books).each(book => {
+            let levenOfTitle = leven(title, book.title),
+              levenOfAuthor = leven(authors, book.author.join('，')),
+              levenOfTranslator = leven(translators, book.translator.join('，')),
+              levenOfPublisher = leven(publisher, book.publisher)
+            book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 +
+              levenOfTranslator * 5
+          })
+          .min('levenValue');
+        (book ? resolve : reject)(book)
+      })
+      .catch(reject)
+    }
+    return reject('No enough query keyword')
   })
 }
 
@@ -603,12 +621,17 @@ function singleHandler([, id]) {
     parentElement.appendChild(info)
 
     parentElement.appendChild(createAmazonLink(title))
+    /*
     getBookInfoByDuokanApiPromise(id)
-      .then(({title, authors, translators, rights}) => ({title, authors, translators, publisher: rights}))
+    */
+    getBookInfoByDocumentPromise()
+      .then(({title, authors, translators, rights, isbn}) => ({title, authors, translators, publisher: rights, isbn}))
       .then(searchBookByDoubanApiPromise)
       .then(book => {
         parentElement.appendChild(createDoubanLink(title, book.alt))
-        parentElement.appendChild(createDoubanRating(book.rating.average))
+        if (book.rating) {
+          parentElement.appendChild(createDoubanRating(book.rating.average))
+        }
       })
     parentElement[KEY] = true
   })
