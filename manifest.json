@@ -6,7 +6,7 @@
 
 , "author": "BlackGlory <woshenmedoubuzhidao@blackglory.me>"
 
-, "description": "为了在多看阅读Web端获得更好的用户体验, 我开发了这款扩展程序, 为您提供多看阅读的最低价格显示、折扣和新书上架提醒等增强功能."
+, "description": "为了在多看阅读Web端获得更好的用户体验, 我开发了这款扩展程序, 为您提供多看阅读的最低价格显示、折扣提醒等增强功能."
 , "icons": {
     "16": "images/icon16.png"
   , "48": "images/icon48.png"

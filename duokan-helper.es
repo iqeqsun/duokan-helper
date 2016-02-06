@@ -174,18 +174,6 @@ class OptionForm extends React.Component {
         , priceOkay = !!bookitem.querySelector(`[data-pricerange="${COLOR.OKAY}"`)
         , priceBad = !!bookitem.querySelector(`[data-pricerange="${COLOR.BAD}"`)
         , display = 'block'
-      if ((priceAwesome && !this.state.show.awesome) ||
-          (priceOkay && !this.state.show.okay) ||
-          (priceBad && !this.state.show.bad)) {
-        display = 'none'
-      }
-      if (priceAwesome) {
-        countAwesome++
-      } else if (priceOkay) {
-        countOkay++
-      } else if (priceBad) {
-        countBad++
-      }
       if (isOwned) {
         countOwned++
         if (this.state.show.owned) {
@@ -193,6 +181,19 @@ class OptionForm extends React.Component {
         } else {
           display = 'none'
         }
+      } else {
+        if (priceAwesome) {
+          countAwesome++
+        } else if (priceOkay) {
+          countOkay++
+        } else if (priceBad) {
+          countBad++
+        }
+      }
+      if ((priceAwesome && !this.state.show.awesome) ||
+          (priceOkay && !this.state.show.okay) ||
+          (priceBad && !this.state.show.bad)) {
+        display = 'none'
       }
       bookitem.style.display = display
     })
