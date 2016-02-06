@@ -2,11 +2,11 @@
   "manifest_version": 2
 , "name": "多看助手"
 , "short_name": "Duokan Helper"
-, "version": "1.0.6"
+, "version": "1.0.7"
 
 , "author": "BlackGlory <woshenmedoubuzhidao@blackglory.me>"
 
-, "description": "本扩展致力于为Chrome用户提供增强多看阅读Web端用户体验的功能, 显示书籍的历史最低价格和豆瓣评分只是扩展功能的一小部分."
+, "description": "为了在多看阅读Web端获得更好的用户体验, 我开发了这款扩展程序, 为您提供多看阅读的最低价格显示、折扣和新书上架提醒等增强功能."
 , "icons": {
     "16": "images/icon16.png"
   , "48": "images/icon48.png"
@@ -25,8 +25,12 @@
   }
 
 , "permissions": [
-    "http://www.duokan.com/"
+    "http://*.duokan.com/"
+  , "https://*.duokan.com/"
   , "https://api.douban.com/"
   , "fontSettings"
+  , "notifications"
+  , "alarms"
+  , "storage"
   ]
 }
