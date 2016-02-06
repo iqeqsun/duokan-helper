@@ -10,15 +10,21 @@ module.exports = {
   , filename: '[name].js'
   }
 , module: {
-    loaders: [{
-      test: /\.es$/
-    , exclude: /node_modules/
-    , loader: 'babel'
-    , query: {
-        presets: ['es2015', 'stage-0', 'stage-1', 'stage-2', 'stage-3', 'react']
-      , plugins: ['transform-runtime', 'syntax-do-expressions', 'syntax-async-functions', 'syntax-async-generators', 'transform-async-to-generator']
+    loaders: [
+      {
+        test: /\.es$/
+      , exclude: /node_modules/
+      , loader: 'babel'
+      , query: {
+          presets: ['es2015', 'stage-0', 'stage-1', 'stage-2', 'stage-3', 'react']
+        , plugins: ['transform-runtime', 'syntax-do-expressions', 'syntax-async-functions', 'syntax-async-generators', 'transform-async-to-generator']
+        }
       }
-    }]
+    , {
+        test: /\.json$/,
+        loader: 'json'
+      }
+    ]
   }
 , plugins: [
     //new webpack.optimize.UglifyJsPlugin(),
