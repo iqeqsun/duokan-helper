@@ -693,9 +693,6 @@ function singleHandler([, id]) {
     parentElement.appendChild(info)
 
     parentElement.appendChild(createAmazonLink(title))
-    /*
-    getBookInfoByDuokanApiPromise(id)
-    */
     getBookInfoByDocumentPromise()
       .then(({title, authors, translators, rights, isbn}) => ({title, authors, translators, publisher: rights, isbn}))
       .then(searchBookByDoubanApiPromise)
@@ -760,7 +757,7 @@ function favouriteHandler() {
 }
 
 async function readerHandler() {
-  let {fontList} = await chrome.runtime.sendMessage({})
+  let {fontList} = await chrome.runtime.sendMessage({type: 'fontList'})
     , insertReaderOption = _.once((container = document.body) => {
       let readerOption = renderReactElement(<ReaderOption fontList={fontList} />)
       container.appendChild(readerOption)
@@ -776,14 +773,8 @@ async function readerHandler() {
   })
 }
 
-function injectScript() {
-  function code() {
-    // NOTHING
-  }
-  let script = document.createElement('script')
-  script.textContent = `!(${code.toString()})()`
-  !(document.head || document.documentElement).appendChild(script)
-  //script.parentNode.removeChild(script)
+async function sendLocalStorage() {
+  await chrome.runtime.sendMessage({type: 'localStorage', data: localStorage})
 }
 
 !function main() {
@@ -796,6 +787,7 @@ function injectScript() {
       , list: commonHandler // 分类
       , publisher: commonHandler // 版权方
       , reader: readerHandler // 多看阅读器
+      , search: commonHandler // 搜索
       }
 
   if(_.first(pathname) === 'u') {
@@ -803,5 +795,5 @@ function injectScript() {
   }
 
   !(handler[_.first(pathname)] || PASS)(pathname)
-  injectScript()
+  sendLocalStorage()
 }()
