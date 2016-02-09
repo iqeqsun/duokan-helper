@@ -588,12 +588,20 @@ function getBookInfoByDuokanApiPromise(id) {
   })
 }
 
+function getInnerText(e) {
+  if (e) {
+    return e.innerText
+  } else {
+    return null
+  }
+}
+
 function getBookInfoByDocumentPromise() {
-  let title = _.trim(document.querySelector('.desc h3').innerText)
-    , isbn = _.trim(document.querySelector('[itemprop="isbn"]').innerText)
-    , authors = _.trim(document.querySelector('[itemprop="author"]').innerText)
-    , rights = _.trim(document.querySelector('[itemprop="copyrightHolder"]').innerText)
-    , translators = _.trim(document.querySelector('[itemprop="translators"]').innerText)
+  let title = _.trim(getInnerText(document.querySelector('.desc h3')))
+    , isbn = _.trim(getInnerText(document.querySelector('[itemprop="isbn"]')))
+    , authors = _.trim(getInnerText(document.querySelector('[itemprop="author"]')))
+    , rights = _.trim(getInnerText(document.querySelector('[itemprop="copyrightHolder"]')))
+    , translators = _.trim(getInnerText(document.querySelector('[itemprop="translators"]')))
   return Promise.resolve({title, authors, translators, rights, isbn})
 }
 
