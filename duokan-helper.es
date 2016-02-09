@@ -262,7 +262,6 @@ function insertOptionForm() {
 }
 
 function searchBookByDoubanApiPromise({title, authors = '', translators = '', publisher = '', isbn = ''}) {
-  console.log(arguments)
   return new Promise((resolve, reject) => {
     if (isbn) {
       return fetch(`https://api.douban.com/v2/book/isbn/${encodeURIComponent(isbn)}`)
