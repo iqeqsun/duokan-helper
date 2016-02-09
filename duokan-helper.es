@@ -4,360 +4,14 @@ import 'babel-polyfill'
 import _ from 'lodash'
 import React from 'react'
 import ReactDOM from 'react-dom'
-import update from 'react-addons-update'
 import classNames from 'classnames'
 import leven from 'leven'
 import ChromePromise from 'chrome-promise'
 
+import Components from './Components.es'
+import {KEY, BASEPATH, COLOR, PASS, id} from './Common.es'
+
 const chrome = new ChromePromise()
-
-const NAME = 'duokan-helper'
-const API = 'http://duokan.blackglory.me'
-const VERSION = 'v1'
-const BASEPATH = `${API}/${VERSION}`
-const KEY = Symbol(NAME)
-
-const MDC = {
-  BLUE: '#2196F3'
-, GREEN: '#4CAF50'
-, YELLOW: '#FFEB3B'
-}
-
-const COLOR = {
-  BAD: 'inherit'
-, OKAY: MDC.BLUE
-, AWESOME: MDC.GREEN
-, NONE: 'inherit'
-}
-
-const PASS = () => {}
-
-const id = (() => {
-  function* gen() {
-    for(let i = 0;;) {
-      yield ++i
-    }
-  }
-  let g = gen()
-  return () => g.next().value
-})()
-
-let optionFormUpdateDOM = null
-  , fontSelectorUpdateDOM = null
-  , backgroundSelectorUpdateDOM = null
-
-class BookItem extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {hover: false}
-  }
-
-  mouseLeaveHandler = () => {
-    this.setState({hover: false})
-  };
-
-  mouseEnterHandler = () => {
-    this.setState({hover: true})
-  };
-
-  render = () => {
-    let li_class = classNames('u-bookitm1', 'u-bookitm1-1', {'u-bookitm1-hover': this.state.hover})
-      , book = this.props.book
-    return (
-      <li className={li_class} onMouseLeave={this.mouseLeaveHandler} onMouseEnter={this.mouseEnterHandler}>
-        <a className="book" href={ book.url } hidefocus="hidefocus">
-          <img src={ book.cover } ondragstart="return false;" oncontextmenu="return false;" onload="onLoadImg(this)" style={{display: 'block'}} />
-        </a>
-        <div className="info">
-          <div className="wrap">
-            <a href={ book.url } className="title" hidefocus="hidefocus">{ book.title }</a>
-            <p className="u-author"><span>{ book.authors }</span></p>
-            <div className="u-price">
-            {do {
-              if (book.price != 0) {
-                [
-                  <em key={id()}>¥ { (+book.price * 1.0).toFixed(2) }</em>,
-                  !!book.new_price && <del key={id()}>¥ { (+book.old_price * 1.0).toFixed(2) }</del>
-                ].filter((n) => n !== true)
-              } else {
-                <b key={id()}>免费</b>
-              }
-            }}
-            </div>
-          </div>
-          <div className="act">
-            {do {
-              if (book.price != 0) {
-                if (!!book.paid) {
-                  <span key={id()}>已购买<b className="l"></b><b className="r"></b></span>
-                } else if (!!book.carted) {
-                  <span key={id()}>已加入购物车</span>
-                }
-              } else {
-                if (!!book.paid) {
-                  <span key={id()}>已领取</span>
-                } else {
-                  <a key={id()} href="<%= book.url %>" hidefocus="hidefocus">去领取</a>
-                }
-              }
-            }}
-          </div>
-        </div>
-        <div className="mask j-mask">
-          <div className="u-mask1"></div>
-          <a className="show j-restore" href="javascript:void(0)" hidefocus="hidefocus">恢复收藏</a>
-        </div>
-      </li>
-    )
-  };
-}
-
-class OptionForm extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      show: {
-        awesome: true
-      , okay: true
-      , bad: true
-      , owned: false
-      }
-    , count: {
-        awesome: 0
-      , okay: 0
-      , bad: 0
-      , owned: 0
-      }
-    }
-    this.updateDOM = this.updateDOM.bind(this)
-    optionFormUpdateDOM = this.updateDOM
-    this.updateDOM()
-  }
-
-  componentDidMount() {
-    this.isReal = true
-  }
-
-  componentWillUnmount() {
-    this.isReal = false
-  }
-
-  checkboxChangeHandler = (field, e) => {
-    let fields = field.split('.')
-      , nextState = {}
-    _.reduce(fields, (state, field, i) => {
-      if (!state[field]) {
-        if (i != _.findLastIndex(fields))  {
-          state[field] = {}
-        } else {
-          state[field] = {
-            $set: e.target.checked
-          }
-        }
-      }
-      return state[field]
-    }, nextState)
-    let newState = update(this.state, nextState)
-    this.setState(newState)
-    _.defer(this.updateDOM)
-  };
-
-  updateDOM() {
-    let bookitems = document.querySelectorAll('.j-container .u-bookitm1')
-      , countAwesome = 0
-      , countOkay = 0
-      , countBad = 0
-      , countOwned = 0
-    _.each(bookitems, (bookitem) => {
-      let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
-        , priceAwesome = !!bookitem.querySelector(`[data-pricerange="${COLOR.AWESOME}"]`)
-        , priceOkay = !!bookitem.querySelector(`[data-pricerange="${COLOR.OKAY}"`)
-        , priceBad = !!bookitem.querySelector(`[data-pricerange="${COLOR.BAD}"`)
-        , display = 'block'
-      if (isOwned) {
-        countOwned++
-        if (this.state.show.owned) {
-          display = 'block'
-        } else {
-          display = 'none'
-        }
-      } else {
-        if (priceAwesome) {
-          countAwesome++
-        } else if (priceOkay) {
-          countOkay++
-        } else if (priceBad) {
-          countBad++
-        }
-      }
-      if ((priceAwesome && !this.state.show.awesome) ||
-          (priceOkay && !this.state.show.okay) ||
-          (priceBad && !this.state.show.bad)) {
-        display = 'none'
-      }
-      bookitem.style.display = display
-    })
-    if (this.isReal) {
-      this.setState(update(this.state, {
-        count: {
-          awesome: {
-            $set: countAwesome
-          }
-        , okay: {
-            $set: countOkay
-          }
-        , bad: {
-            $set: countBad
-          }
-        , owned: {
-            $set: countOwned
-          }
-        }
-      }))
-    }
-  };
-
-  render = () => {
-    return (
-      <form>
-        <label style={{color: COLOR.BAD}}>
-          <input type="checkbox" checked={this.state.show.bad} onChange={this.checkboxChangeHandler.bind(this, 'show.bad')} />显示高于最低价格的书籍({this.state.count.bad})
-        </label>
-        <br />
-        <label style={{color: COLOR.OKAY}}>
-          <input type="checkbox" checked={this.state.show.okay} onChange={this.checkboxChangeHandler.bind(this, 'show.okay')} />显示与最低价格持平的书籍({this.state.count.okay})
-        </label>
-        <br />
-        <label style={{color: COLOR.AWESOME}}>
-          <input type="checkbox" checked={this.state.show.awesome} onChange={this.checkboxChangeHandler.bind(this, 'show.awesome')} />显示低于最低价格的书籍({this.state.count.awesome})
-        </label>
-        <br />
-        <label>
-          <input type="checkbox" checked={this.state.show.owned} onChange={this.checkboxChangeHandler.bind(this, 'show.owned')} />显示已购书籍({this.state.count.owned})
-        </label>
-        <br />
-      </form>
-    )
-  };
-}
-
-class FontSelector extends React.Component {
-  constructor(props) {
-    super(props)
-    this.defaultFont = fontFamilyDetect(this.props.fontList, document.querySelector('svg > *'))
-    this.state = {
-      font: _.first(this.defaultFont)
-    }
-    fontSelectorUpdateDOM = this.setFont
-  }
-
-  inputChangeHandler = (field, e) => {
-    let nextState = {}
-    nextState[field] = e.target.value
-    this.setState(nextState)
-    this.setFont()
-  };
-
-  setFont = svgs => {
-    _.defer(() => this.updateDOM(svgs))
-  };
-
-  updateDOM = (svgs = document.querySelectorAll('div.text > svg')) => {
-    _(svgs)
-    .map(svg => svg.children)
-    .map(_.toArray)
-    .flatten()
-    .each(e => e.style.fontFamily = `"${this.state.font}", ${this.defaultFont}`)
-    .run()
-  };
-
-  render = () => {
-    return (
-      <div style={{textAlign: 'start'}}>
-        <label>字体: </label>
-        <select style={{width: '15rem'}} value={this.state.font} onChange={this.inputChangeHandler.bind(this, 'font')}>
-        {this.props.fontList.map(font => <option key={id()} value={font.fontId}>{font.displayName}</option>)}
-        </select>
-      </div>
-    )
-  };
-}
-
-class BackgroundSelector extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      color: `#${rgb2hex(window.getComputedStyle(this.getContainer(), null).backgroundColor)}`
-    }
-    backgroundSelectorUpdateDOM = this.setBackground
-  }
-
-  getContainer() {
-    return document.querySelector('.j-page-container.j-md-book')
-  }
-
-  getBookPages() {
-    let bookPages = this.getContainer().querySelectorAll('.book_page_wrapper')
-    return bookPages
-  }
-
-  inputChangeHandler = (field, e) => {
-    let nextState = {}
-    nextState[field] = e.target.value
-    this.setState(nextState)
-    this.setBackground()
-  };
-
-  setBackground = bookPages => {
-    _.defer(() => this.updateDOM(bookPages))
-  };
-
-  updateDOM = (bookPages = this.getBookPages()) => {
-    _.each(bookPages, e => {e.style.backgroundColor = this.state.color})
-  };
-
-  render = () => {
-    return (
-      <div style={{textAlign: 'start'}}>
-        <label>背景色: </label>
-        <input type="color" value={this.state.color} onChange={this.inputChangeHandler.bind(this, 'color')} />
-      </div>
-    )
-  };
-}
-
-class ReaderOption extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-
-  render = () => {
-    let fromStyle = {
-          position: 'absolute'
-        , top: '1rem'
-        , left: '1rem'
-        , zIndex: 999
-        , color: 'white'
-        }
-    return (
-      <form style={fromStyle}>
-        <BackgroundSelector />
-        <FontSelector fontList={this.props.fontList} />
-      </form>
-    )
-  };
-}
-
-function fontFamilyDetect(fontList, e) {
-  let fontIds = _.map(fontList, font => font.fontId)
-    , fontFamily = window.getComputedStyle(e, null).fontFamily.split(',')
-    , font = _(fontFamily)
-        .map(fontName => fontName.trim())
-        .map(fontName => fontName.match(/(['"]?)([\S\s]+)(\1)/)[2])
-        .filter(fontName => fontIds.includes(fontName))
-        .value()
-  return font
-}
 
 function status(response) {
   if (response.status >= 200 && response.status) {
@@ -365,11 +19,6 @@ function status(response) {
   } else {
     return Promise.reject(new Error(response.statusText))
   }
-}
-
-function rgb2hex(...rgb) {
-  rgb = rgb.join().match(/\d+/g)
-  return ((rgb[0] << 16) + (rgb[1] << 8) + (+rgb[2])).toString(16)
 }
 
 function json(response) {
@@ -607,7 +256,7 @@ function getBookInfoByDocumentPromise() {
 
 function insertOptionForm() {
   let container = document.querySelector('.u-nav-stacked ul')
-    , optionForm = renderReactElement(<li><OptionForm /></li>)
+    , optionForm = renderReactElement(<Components.OptionForm />, 'li')
   container.appendChild(optionForm)
   return optionForm
 }
@@ -737,7 +386,7 @@ function favouriteHandler() {
     .then(_.toArray)
     .then((error_books) => _(as).concat(error_books).value())
     .then(aElementsHandler)
-    .then(() => _.defer(optionFormUpdateDOM))
+    .then(() => _.defer(Components.OptionForm.updateDOM))
     .catch(errorHandler)
   })
   getWishPromise().then((books) => {
@@ -758,26 +407,26 @@ function favouriteHandler() {
         book.old_price = book.price
         book.price = book.new_price
       }
-      container.appendChild(<BookItem book={book} />)
+      container.appendChild(<Components.BookItem book={book} />)
     }, _.defer))
     .run()
-    _.defer(optionFormUpdateDOM)
+    _.defer(Components.OptionForm.updateDOM)
   })
 }
 
 async function readerHandler() {
   let {fontList} = await chrome.runtime.sendMessage({type: 'fontList'})
     , insertReaderOption = _.once((container = document.body) => {
-      let readerOption = renderReactElement(<ReaderOption fontList={fontList} />)
+      let readerOption = renderReactElement(<Components.ReaderOption fontList={fontList} />)
       container.appendChild(readerOption)
     })
   addReaderElementObserver((svgs) => {
     if (document.querySelector('svg > *')) {
       insertReaderOption()
     }
-    if (fontSelectorUpdateDOM) {
-      fontSelectorUpdateDOM(svgs)
-      backgroundSelectorUpdateDOM()
+    if (Components.FontSelector.updateDOM && Components.BackgroundSelector.updateDOM) {
+      Components.FontSelector.updateDOM(svgs)
+      Components.BackgroundSelector.updateDOM()
     }
   })
 }
