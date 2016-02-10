@@ -2,6 +2,12 @@
 
 多看助手
 
-技术栈: Babel, React, Chrome Extension
+[Chrome Web Store](https://chrome.google.com/webstore/detail/%E5%A4%9A%E7%9C%8B%E5%8A%A9%E6%89%8B/hiaeckogboegemofpfpmbpcgeolknmem)
 
-开发环境: Atom
+## 安装依赖
+
+npm install
+
+## 编译
+
+webpack
