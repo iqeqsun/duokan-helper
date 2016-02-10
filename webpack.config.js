@@ -2,8 +2,8 @@ var webpack = require('webpack')
 
 module.exports = {
   entry: {
-    'duokan-helper': './duokan-helper.es'
-  , 'background': './background.es'
+    'duokan-helper': './duokan-helper.jsx'
+  , 'background': './background.jsx'
   }
 , output: {
     path: __dirname
@@ -12,7 +12,7 @@ module.exports = {
 , module: {
     loaders: [
       {
-        test: /\.es$/
+        test: /\.jsx$/
       , exclude: /node_modules/
       , loader: 'babel'
       , query: {

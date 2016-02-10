@@ -1,6 +1,6 @@
 import React from 'react'
-import BackgroundSelector from './BackgroundSelector.es'
-import FontSelector from './FontSelector.es'
+import BackgroundSelector from './BackgroundSelector.jsx'
+import FontSelector from './FontSelector.jsx'
 
 export default class ReaderOption extends React.Component {
   constructor(props) {

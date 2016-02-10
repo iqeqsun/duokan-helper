@@ -8,8 +8,8 @@ import classNames from 'classnames'
 import leven from 'leven'
 import ChromePromise from 'chrome-promise'
 
-import Components from './Components.es'
-import {KEY, BASEPATH, COLOR, PASS, id} from './Common.es'
+import Components from './Components.jsx'
+import {KEY, BASEPATH, COLOR, PASS, id} from './Common.jsx'
 
 const chrome = new ChromePromise()
 

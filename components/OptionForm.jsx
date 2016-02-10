@@ -1,7 +1,7 @@
 import React from 'react'
 import update from 'react-addons-update'
 import _ from 'lodash'
-import {COLOR} from '../Common.es'
+import {COLOR} from '../Common.jsx'
 
 export default class OptionForm extends React.Component {
   constructor(props) {

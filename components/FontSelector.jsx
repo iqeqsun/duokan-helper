@@ -1,6 +1,6 @@
 import React from 'react'
 import _ from 'lodash'
-import {id} from '../Common.es'
+import {id} from '../Common.jsx'
 
 function fontFamilyDetect(fontList, e) {
   let fontIds = _.map(fontList, font => font.fontId)
