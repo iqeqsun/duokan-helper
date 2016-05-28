@@ -4,6 +4,7 @@ import _ from 'lodash'
 import cheerio from 'cheerio'
 
 let notificationClickedHanlders = {}
+  , notificationList = {}
 
 function createNotification(options) {
   return new Promise((resolve, reject) => {
@@ -12,6 +13,9 @@ function createNotification(options) {
 }
 
 async function createDiscountNotification(url, title, current_price, old_price, image_url) {
+  if (notificationList[url]) {
+    return
+  }
   let id = await createNotification({
     type: 'basic'
   , iconUrl: image_url
@@ -19,6 +23,7 @@ async function createDiscountNotification(url, title, current_price, old_price, 
   , message: `原价: ${old_price.toFixed(2)}元 现价: ${current_price.toFixed(2)}元`
   , contextMessage: `来自 多看助手`
   })
+  notificationList[url] = id
   notificationClickedHanlders[id] = () => chrome.tabs.create({url})
 }
 
@@ -57,14 +62,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   switch (request.type) {
     case 'fontList':
       chrome.fontSettings.getFontList(callback => {
-        sendResponse({fontList: callback})
+        sendResponse({ fontList: callback })
       })
       break
     case 'localStorage':
       let local = request.data.local
       if (local) {
         local = JSON.parse(local)
-        chrome.storage.local.set({local}, sendResponse)
+        chrome.storage.local.set({ local }, sendResponse)
       }
       break
     default:
@@ -72,13 +77,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   return true
 })
 
-chrome.runtime.onStartup.addListener(() => {
-  checkPrice()
-})
+chrome.runtime.onStartup.addListener(checkPrice)
 
 chrome.alarms.onAlarm.addListener(({name}) => {
-  let jobs = {checkPrice}
+  let jobs = { checkPrice }
   jobs[name]()
+})
+
+chrome.notifications.onClosed.addListener(notificationId => {
+  Object.keys(notificationList).forEach(key => {
+    if (notificationList[key] === notificationId) {
+      notificationList[key] = false
+    }
+  })
 })
 
 chrome.notifications.onClicked.addListener(notificationId => {
@@ -86,10 +97,10 @@ chrome.notifications.onClicked.addListener(notificationId => {
   if (handler) {
     handler()
     chrome.notifications.clear(notificationId)
-    notificationClickedHanlders[notificationId] = null
+      notificationClickedHanlders[notificationId] = null
   }
 })
 
-chrome.alarms.create('checkPrice', {periodInMinutes: 90})
+chrome.alarms.create('checkPrice', {periodInMinutes: 120})
 
 checkPrice()
