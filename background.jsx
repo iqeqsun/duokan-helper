@@ -3,7 +3,7 @@
 import _ from 'lodash'
 import cheerio from 'cheerio'
 
-let notificationClickedHanlders = {}
+let notificationClickedHandlers = {}
   , notificationList = {}
 
 function createNotification(options) {
@@ -24,7 +24,7 @@ async function createDiscountNotification(url, title, current_price, old_price, 
   , contextMessage: `来自 多看助手`
   })
   notificationList[url] = id
-  notificationClickedHanlders[id] = () => chrome.tabs.create({url})
+  notificationClickedHandlers[id] = () => chrome.tabs.create({url})
 }
 
 function checkPrice() {
@@ -93,11 +93,11 @@ chrome.notifications.onClosed.addListener(notificationId => {
 })
 
 chrome.notifications.onClicked.addListener(notificationId => {
-  let handler = notificationClickedHanlders[notificationId]
+  let handler = notificationClickedHandlers[notificationId]
   if (handler) {
     handler()
     chrome.notifications.clear(notificationId)
-      notificationClickedHanlders[notificationId] = null
+      notificationClickedHandlers[notificationId] = null
   }
 })
 
