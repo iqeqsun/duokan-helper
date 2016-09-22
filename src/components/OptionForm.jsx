@@ -1,7 +1,9 @@
+'use strict'
+
 import React from 'react'
 import update from 'react-addons-update'
 import _ from 'lodash'
-import {COLOR} from '../Common.jsx'
+import { COLOR } from '../common'
 
 export default class OptionForm extends React.Component {
   constructor(props) {
@@ -33,7 +35,7 @@ export default class OptionForm extends React.Component {
     this.isReal = false
   }
 
-  checkboxChangeHandler = (field, e) => {
+  checkboxChangeHandler(field, e) {
     let fields = field.split('.')
       , nextState = {}
     _.reduce(fields, (state, field, i) => {
@@ -51,7 +53,7 @@ export default class OptionForm extends React.Component {
     let newState = update(this.state, nextState)
     this.setState(newState)
     _.defer(this.updateDOM)
-  };
+  }
 
   updateDOM() {
     let bookitems = document.querySelectorAll('.j-container .u-bookitm1')
@@ -106,9 +108,9 @@ export default class OptionForm extends React.Component {
         }
       }))
     }
-  };
+  }
 
-  render = () => {
+  render() {
     return (
       <form>
         <label style={{color: COLOR.BAD}}>
@@ -129,5 +131,5 @@ export default class OptionForm extends React.Component {
         <br />
       </form>
     )
-  };
+  }
 }

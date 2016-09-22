@@ -1,23 +1,31 @@
-var webpack = require('webpack')
+const webpack = require('webpack')
+const path = require('path')
+const CopyWebpackPlugin = require('copy-webpack-plugin')
 
 module.exports = {
   entry: {
-    'duokan-helper': './duokan-helper.jsx'
-  , 'background': './background.jsx'
+    'duokan-helper': './src/duokan-helper.js'
+  , 'background': './src/background.js'
   }
 , output: {
-    path: __dirname
+    path: path.join(__dirname, 'build')
   , filename: '[name].js'
   }
+, devtool: 'source-map'
 , module: {
     loaders: [
       {
-        test: /\.jsx$/
+        test: /\.jsx?$/
       , exclude: /node_modules/
       , loader: 'babel'
       , query: {
-          presets: ['es2015', 'stage-0', 'stage-1', 'stage-2', 'stage-3', 'react']
-        , plugins: ['transform-runtime', 'syntax-do-expressions', 'syntax-async-functions', 'syntax-async-generators', 'transform-async-to-generator']
+          presets: ['latest', 'react']
+        , plugins: [
+            'syntax-do-expressions'
+          , 'transform-do-expressions'
+          , 'transform-react-jsx'
+          , 'transform-runtime'
+          ]
         }
       }
     , {
@@ -27,9 +35,12 @@ module.exports = {
     ]
   }
 , plugins: [
-    //new webpack.optimize.UglifyJsPlugin(),
     new webpack.ProvidePlugin({
       'fetch': 'imports?this=>global!exports?global.fetch!whatwg-fetch'
     })
+  , new CopyWebpackPlugin([
+      { from: './src/images', to: 'images' }
+    , { from: './src/manifest.json' }
+    ])
   ]
 }

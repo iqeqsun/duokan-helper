@@ -1,3 +1,5 @@
+'use strict'
+
 import React from 'react'
 import _ from 'lodash'
 
@@ -24,28 +26,28 @@ export default class BackgroundSelector extends React.Component {
     return bookPages
   }
 
-  inputChangeHandler = (field, e) => {
+  inputChangeHandler(field, e) {
     let nextState = {}
     nextState[field] = e.target.value
     this.setState(nextState)
     this.setBackground()
-  };
+  }
 
-  setBackground = bookPages => {
+  setBackground(bookPages) {
     _.defer(() => this.updateDOM(bookPages))
-  };
+  }
 
-  updateDOM = (bookPages = this.getBookPages()) => {
+  updateDOM(bookPages = this.getBookPages()) {
     _.each(bookPages, e => {e.style.backgroundColor = this.state.color})
     document.querySelector('.rd_footer').style.backgroundColor = this.state.color
-  };
+  }
 
-  render = () => {
+  render() {
     return (
       <div style={{textAlign: 'start'}}>
         <label>背景色: </label>
         <input type="color" value={this.state.color} onChange={this.inputChangeHandler.bind(this, 'color')} />
       </div>
     )
-  };
+  }
 }

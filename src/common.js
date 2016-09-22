@@ -1,3 +1,5 @@
+'use strict'
+
 export const NAME = 'duokan-helper'
 export const API = 'http://duokan.blackglory.me'
 export const VERSION = 'v1'

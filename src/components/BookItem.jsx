@@ -1,22 +1,25 @@
+'use strict'
+
 import React from 'react'
 
 export default class BookItem extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {hover: false}
+    this.state = { hover: false }
   }
 
-  mouseLeaveHandler = () => {
-    this.setState({hover: false})
-  };
+  mouseLeaveHandler() {
+    this.setState({ hover: false })
+  }
 
-  mouseEnterHandler = () => {
-    this.setState({hover: true})
-  };
+  mouseEnterHandler() {
+    this.setState({ hover: true })
+  }
 
-  render = () => {
+  render() {
     let li_class = classNames('u-bookitm1', 'u-bookitm1-1', {'u-bookitm1-hover': this.state.hover})
       , book = this.props.book
+
     return (
       <li className={li_class} onMouseLeave={this.mouseLeaveHandler} onMouseEnter={this.mouseEnterHandler}>
         <a className="book" href={ book.url } hidefocus="hidefocus">
@@ -63,5 +66,5 @@ export default class BookItem extends React.Component {
         </div>
       </li>
     )
-  };
+  }
 }

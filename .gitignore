@@ -1,4 +1,3 @@
 node_modules/
 *.zip
-duokan-helper.js
-background.js
+build/

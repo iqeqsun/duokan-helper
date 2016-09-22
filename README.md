@@ -12,5 +12,5 @@ npm install
 ## 编译
 
 ```
-webpack
+npm run build
 ```

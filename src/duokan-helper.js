@@ -1,5 +1,6 @@
 'use strict'
 
+import Rollbar from './rollbar'
 import 'babel-polyfill'
 import _ from 'lodash'
 import React from 'react'
@@ -9,7 +10,7 @@ import leven from 'leven'
 import ChromePromise from 'chrome-promise'
 
 import Components from './Components.jsx'
-import {KEY, BASEPATH, COLOR, PASS, id} from './Common.jsx'
+import { KEY, BASEPATH, COLOR, PASS, id } from './common'
 
 const chrome = new ChromePromise()
 
@@ -30,7 +31,7 @@ function serialize(obj) {
 }
 
 function pathname2Array(s) {
-  return _.rest(s.split('/'))
+  return _.tail(s.split('/'))
 }
 
 function errorHandler(err) {
@@ -84,8 +85,8 @@ function aElementsHandler(elements) {
       return
     }
     let obj = _.map(elements, getIdFromA)
-      , ids = _.pluck(obj, 'id')
-      , as = _.pluck(obj, 'a')
+      , ids = _.map(obj, 'id')
+      , as = _.map(obj, 'a')
     getBookPromise(ids.join(',')).then(books => {
       for(let i in books) {
         if(books[i] === null) {
@@ -316,8 +317,8 @@ function getWishPromise() {
 
 function commonHandler() {
   let obj = _.map(document.querySelectorAll('a.title[href^="/book/"]'), getIdFromA)
-    , ids = _.pluck(obj, 'id')
-    , as = _.pluck(obj, 'a')
+    , ids = _.map(obj, 'id')
+    , as = _.map(obj, 'a')
   getBookPromise(ids.join(',')).then(books => {
     for(let i in books) {
       let min_price = books[i]['Min'].toFixed(2)
@@ -396,10 +397,10 @@ function favouriteHandler() {
       , carted = local.cart
       , carted_ids = carted.map(book => book.id)
     _(books)
-    .filter((book) => !_.include(fav_ids, book.book_id))
+    .filter((book) => !_.includes(fav_ids, book.book_id))
     .each(_.wrap(book => {
-      book.paid = _.include(paid_ids, book.book_id)
-      book.carted = _.include(carted_ids, book.book_id)
+      book.paid = _.includes(paid_ids, book.book_id)
+      book.carted = _.includes(carted_ids, book.book_id)
       book.cover = book.cover.replace(/m$/, 't')
       book.url = `/book/${book.sid}`
       if(book.new_price) {
@@ -408,7 +409,6 @@ function favouriteHandler() {
       }
       container.appendChild(<Components.BookItem book={book} />)
     }, _.defer))
-    .run()
     _.defer(Components.OptionForm.updateDOM)
   })
 }
