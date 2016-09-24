@@ -30,7 +30,7 @@ async function createDiscountNotification(url, title, current_price, old_price, 
 }
 
 function checkPrice() {
-  chrome.storage.local.get('local', ({local}) => {
+  chrome.storage.local.get('local', ({ local }) => {
     if (local && local.fav && local.fav.list && local.paidList) {
       let fav = local.fav.list
         , paid = local.paidList
@@ -39,8 +39,15 @@ function checkPrice() {
           .map(({title, price, url, cover}) => ({title, price, url, cover}))
           .value()
       _.each(favUnpaid, (book, i) => {
+        let target = `http://www.duokan.com${book.url}`
+        try {
+          new URL(target)
+        } catch (e) {
+          console.log(e)
+          return
+        }
         _.delay(() => {
-          fetch(`http://www.duokan.com${book.url}`)
+          fetch(target)
           .then(response => response.text())
           .then(body => {
             let $ = cheerio.load(body)
@@ -103,4 +110,4 @@ chrome.notifications.onClicked.addListener(notificationId => {
 
 chrome.alarms.create('checkPrice', { periodInMinutes: 120 })
 
-chrome.runtime.onStartup.addListener(checkPrice)
+checkPrice()

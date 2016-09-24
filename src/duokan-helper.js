@@ -282,8 +282,8 @@ function searchBookByDoubanApiPromise({title, authors = '', translators = '', pu
             book.levenValue = levenOfTitle * 10 + levenOfAuthor * 5 +
               levenOfTranslator * 5
           })
-          .min('levenValue');
-        (book ? resolve : reject)(book)
+        book = _.min(books, 'levenValue')
+        ;(book ? resolve : reject)(book)
       })
       .catch(reject)
     }
