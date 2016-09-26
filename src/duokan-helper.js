@@ -269,6 +269,7 @@ function searchBookByDoubanApiPromise({title, authors = '', translators = '', pu
       .then(status)
       .then(json)
       .then(resolve)
+      .catch(reject)
     } else if (title) {
       return fetch(`https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`)
       .then(status)
@@ -360,6 +361,7 @@ function singleHandler([, id]) {
           parentElement.appendChild(createDoubanRating(book.rating.average))
         }
       })
+      .catch(console.error)
     parentElement[KEY] = true
   })
   .catch(errorHandler)
