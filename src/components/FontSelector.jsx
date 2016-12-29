@@ -43,7 +43,7 @@ export default class FontSelector extends React.Component {
     .map(svg => svg.children)
     .map(_.toArray)
     .flatten()
-    .each(e => e.style.fontFamily = `"${this.state.font}", ${this.defaultFont}`)
+    .each(e => e.style.fontFamily = `"${ this.state.font }", ${ this.defaultFont }`)
   }
 
   render() {

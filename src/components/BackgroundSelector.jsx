@@ -38,15 +38,15 @@ export default class BackgroundSelector extends React.Component {
   }
 
   updateDOM(bookPages = this.getBookPages()) {
-    _.each(bookPages, e => {e.style.backgroundColor = this.state.color})
+    _.each(bookPages, e => e.style.backgroundColor = this.state.color)
     document.querySelector('.rd_footer').style.backgroundColor = this.state.color
   }
 
   render() {
     return (
-      <div style={{textAlign: 'start'}}>
+      <div style={{ textAlign: 'start' }}>
         <label>背景色: </label>
-        <input type="color" value={this.state.color} onChange={this.inputChangeHandler.bind(this, 'color')} />
+        <input type="color" value={ this.state.color } onChange={ this.inputChangeHandler.bind(this, 'color') } />
       </div>
     )
   }

@@ -15,14 +15,15 @@ function createNotification(options) {
 }
 
 async function createDiscountNotification(url, title, current_price, old_price, image_url) {
-  if (notificationList[url]) {
+  let discount = Math.round((old_price - current_price) / old_price * 100)
+  if (notificationList[url] || discount === 0) {
     return
   }
   let id = await createNotification({
     type: 'basic'
   , iconUrl: image_url
-  , title: `《${title}》已降价${Math.round((old_price - current_price) / old_price * 100)}%`
-  , message: `原价: ${old_price.toFixed(2)}元 现价: ${current_price.toFixed(2)}元`
+  , title: `《${ title }》已降价${ discount }%`
+  , message: `原价: ${ old_price.toFixed(2) }元 现价: ${ current_price.toFixed(2) }元`
   , contextMessage: `来自 多看助手`
   })
   notificationList[url] = id
@@ -108,6 +109,6 @@ chrome.notifications.onClicked.addListener(notificationId => {
   }
 })
 
-chrome.alarms.create('checkPrice', { periodInMinutes: 120 })
+chrome.alarms.create('checkPrice', { periodInMinutes: 6 * 60 })
 
 checkPrice()

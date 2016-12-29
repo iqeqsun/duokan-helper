@@ -2,28 +2,23 @@
   "manifest_version": 2
 , "name": "多看助手"
 , "short_name": "Duokan Helper"
-, "version": "1.1.2"
-
+, "version": "1.2.0"
 , "author": "BlackGlory <woshenmedoubuzhidao@blackglory.me>"
-
 , "description": "为了在多看阅读Web端获得更好的用户体验, 我开发了这款扩展程序, 为您提供多看阅读的最低价格显示、折扣提醒等增强功能."
 , "icons": {
     "16": "images/icon16.png"
   , "48": "images/icon48.png"
   , "128": "images/icon128.png"
   }
-
 , "content_scripts": [{
     "matches": ["http://www.duokan.com/*"]
   , "js": ["duokan-helper.js"]
   , "run_at": "document_idle"
   }]
-
 , "background": {
     "scripts": ["background.js"]
   , "persistent": false
   }
-
 , "permissions": [
     "http://*.duokan.com/"
   , "https://*.duokan.com/"

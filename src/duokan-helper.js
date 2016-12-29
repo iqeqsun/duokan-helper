@@ -27,7 +27,7 @@ function json(response) {
 }
 
 function serialize(obj) {
-  return _.map(_.keys(obj), key => `${encodeURIComponent(key)}=${encodeURIComponent(obj[key])}`).join('&')
+  return _.map(_.keys(obj), key => `${ encodeURIComponent(key) }=${ encodeURIComponent(obj[key]) }`).join('&')
 }
 
 function pathname2Array(s) {
@@ -39,14 +39,14 @@ function errorHandler(err) {
 }
 
 function getBookPromise(id) {
-  return fetch(`${BASEPATH}/book/${id}`)
+  return fetch(`${ BASEPATH }/book/${ id }`)
     .then(status)
     .then(json)
     .catch(errorHandler)
 }
 
 function createInfoElement(text, pricerange = COLOR.NONE) {
-  return createElementByReact(<i data-pricerange={pricerange} style={{color: pricerange}}>{text}</i>)
+  return createElementByReact(<div><i data-pricerange={ pricerange } style={{ color: pricerange }}>{ text }</i></div>)
 }
 
 function createElementByReact(jsx) {
@@ -63,20 +63,28 @@ function renderReactElement(jsx, container = 'div') {
   return container
 }
 
-function createDoubanLink(title, url = `https://book.douban.com/subject_search?search_text=${encodeURIComponent(title)}`) {
-  return createElementByReact(<diV><a href={url} target="_blank">到豆瓣看 {title} 的评价</a></diV>)
-}
-
-function createDoubanRating(rating) {
+function createDoubanRating(rating, title, url = `//book.douban.com/subject_search?search_text=${ encodeURIComponent(title) }`) {
   if (rating === '0.0') {
-    return createElementByReact(<span>豆瓣无人评价此书</span>)
+    return createElementByReact(<span><a href={ url } target="_blank" style={{ color: COLOR.NONE }}>豆瓣无人评价此书</a></span>)
   } else {
-    return createElementByReact(<span>豆瓣评分: {rating}</span>)
+    return createElementByReact(<span><a href={ url } target="_blank" style={{ color: COLOR.NONE }}>豆瓣评分: { rating }</a></span>)
   }
 }
 
 function createAmazonLink(title) {
-  return createElementByReact(<div><a href={`http://www.amazon.cn/s/${encodeURIComponent(title)}`} target="_blank">到亚马逊找 {title} </a></div>)
+  return createElementByReact(<span><a href={ `//www.amazon.cn/s/${ encodeURIComponent(title) }` } target="_blank">亚马逊</a></span>)
+}
+
+function createTaobaoLink(title) {
+  return createElementByReact(<span><a href={ `//search.taobao.com/search?q=${ encodeURIComponent(title) }` } target="_blank">淘宝</a></span>)
+}
+
+function createJDLink(title) {
+  return createElementByReact(<span><a href={ `//search.jd.com/Search?keyword=${ encodeURIComponent(title) }&enc=utf-8` }>京东</a></span>)
+}
+
+function createDangDangLink(title) {
+  return createElementByReact(<span><a href={ `//search.dangdang.com/?key=${ encodeURIComponent(title) }` }>当当</a></span>)
 }
 
 function aElementsHandler(elements) {
@@ -97,7 +105,7 @@ function aElementsHandler(elements) {
           , current_price_element = a.parentElement.querySelector('.u-price')
         if (current_price_element) {
           let current_price = Number(_.first(current_price_element.textContent.match(/[\d.]+/)))
-            , styles = {fontStyle: 'normal'}
+            , styles = { fontStyle: 'normal' }
             , price_range = COLOR.NONE
           if (current_price < min_price) {
             price_range = COLOR.AWESOME
@@ -106,7 +114,7 @@ function aElementsHandler(elements) {
           } else if (current_price > min_price) {
             price_range = COLOR.BAD
           }
-          let info = createInfoElement(`历史最低: ¥ ${min_price.toFixed(2)}`, price_range)
+          let info = createInfoElement(`历史最低: ¥ ${ min_price.toFixed(2) }`, price_range)
           a.parentElement.style.overflow = 'visible'
           a.parentElement.appendChild(info)
           a.parentElement[KEY] = true
@@ -134,9 +142,9 @@ function log(title = null) {
     }
     return (obj) => {
       if(_.isString(obj)) {
-        console.log(`${title}: ${obj}`)
+        console.log(`${ title }: ${ obj }`)
       } else {
-        console.log(`${title}:`)
+        console.log(`${ title }:`)
         console.dir(obj)
       }
       return obj
@@ -229,7 +237,7 @@ function getFavsPromise(start = 0, count = 10) {
 
 function getBookInfoByDuokanApiPromise(id) {
   return new Promise((resolve, reject) => {
-    fetch(`http://www.duokan.com/hs/v0/android/store/book/${encodeURIComponent(id)}`)
+    fetch(`http://www.duokan.com/hs/v0/android/store/book/${ encodeURIComponent(id) }`)
     .then(status)
     .then(json)
     .then(response => response.item)
@@ -265,13 +273,13 @@ function insertOptionForm() {
 function searchBookByDoubanApiPromise({title, authors = '', translators = '', publisher = '', isbn = ''}) {
   return new Promise((resolve, reject) => {
     if (isbn) {
-      return fetch(`https://api.douban.com/v2/book/isbn/${encodeURIComponent(isbn)}`)
+      return fetch(`https://api.douban.com/v2/book/isbn/${ encodeURIComponent(isbn) }`)
       .then(status)
       .then(json)
       .then(resolve)
       .catch(reject)
     } else if (title) {
-      return fetch(`https://api.douban.com/v2/book/search?&q=${encodeURIComponent(title)}`)
+      return fetch(`https://api.douban.com/v2/book/search?&q=${ encodeURIComponent(title) }`)
       .then(status)
       .then(json)
       .then(({books}) => {
@@ -323,7 +331,7 @@ function commonHandler() {
   getBookPromise(ids.join(',')).then(books => {
     for(let i in books) {
       let min_price = books[i]['Min'].toFixed(2)
-        , info = createInfoElement(`历史最低: ¥ ${min_price}`)
+        , info = createInfoElement(`历史最低: ¥ ${ min_price }`)
         , a = as[i]
       a.parentElement.style.overflow = 'visible'
       a.parentElement.appendChild(info)
@@ -339,26 +347,34 @@ function singleHandler([, id]) {
       , title = data.Title
       , id = data.Id
       , parentElement = document.querySelector('.price')
+
     if(parentElement[KEY]) {
       return
     }
+
     let min = getMinTimeline(timeline)
       , price = min.Price.toFixed(2)
       , time = new Date(min.Timestamp * 1000)
       , year = time.getFullYear()
-      , month = `0${time.getMonth() + 1}`.substr(-2)
-      , day = `0${time.getDate()}`.substr(-2)
-      , info = createInfoElement(`历史最低: ¥ ${price} (${year}-${month}-${day})`)
+      , month = `0${ time.getMonth() + 1 }`.substr(-2)
+      , day = `0${ time.getDate() }`.substr(-2)
+      , info = createInfoElement(`历史最低: ¥ ${ price } (${ year }-${ month }-${ day })`)
     parentElement.appendChild(info)
 
-    parentElement.appendChild(createAmazonLink(title))
+    let links = createElementByReact(<div><span>购买纸质版: </span></div>)
+    parentElement.appendChild(links)
+
+    links.appendChild(createTaobaoLink(title))
+    links.appendChild(createJDLink(title))
+    links.appendChild(createAmazonLink(title))
+    links.appendChild(createDangDangLink(title))
+
     getBookInfoByDocumentPromise()
       .then(({title, authors, translators, rights, isbn}) => ({title, authors, translators, publisher: rights, isbn}))
       .then(searchBookByDoubanApiPromise)
       .then(book => {
-        parentElement.appendChild(createDoubanLink(title, book.alt))
         if (book.rating) {
-          parentElement.appendChild(createDoubanRating(book.rating.average))
+          parentElement.appendChild(createDoubanRating(book.rating.average, title, book.alt))
         }
       })
       .catch(console.error)
@@ -380,7 +396,7 @@ function favouriteHandler() {
           , index = _.findIndex(fav, fav_book => title === fav_book.title)
           , book = fav[index]
         if (index >= 0) {
-          a.href = `/book/${book.id}`
+          a.href = `/book/${ book.id }`
         }
       })
       return error_title_books
@@ -409,16 +425,16 @@ function favouriteHandler() {
         book.old_price = book.price
         book.price = book.new_price
       }
-      container.appendChild(<Components.BookItem book={book} />)
+      container.appendChild(<Components.BookItem book={ book } />)
     }, _.defer))
     _.defer(Components.OptionForm.updateDOM)
   })
 }
 
 async function readerHandler() {
-  let {fontList} = await chrome.runtime.sendMessage({type: 'fontList'})
+  let {fontList} = await chrome.runtime.sendMessage({ type: 'fontList' })
     , insertReaderOption = _.once((container = document.body) => {
-      let readerOption = renderReactElement(<Components.ReaderOption fontList={fontList} />)
+      let readerOption = renderReactElement(<Components.ReaderOption fontList={ fontList } />)
       container.appendChild(readerOption)
     })
   addReaderElementObserver((svgs) => {

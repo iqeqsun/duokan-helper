@@ -63,9 +63,9 @@ export default class OptionForm extends React.Component {
       , countOwned = 0
     _.each(bookitems, (bookitem) => {
       let isOwned = bookitem.querySelector('.act').textContent.includes('已购买')
-        , priceAwesome = !!bookitem.querySelector(`[data-pricerange="${COLOR.AWESOME}"]`)
-        , priceOkay = !!bookitem.querySelector(`[data-pricerange="${COLOR.OKAY}"`)
-        , priceBad = !!bookitem.querySelector(`[data-pricerange="${COLOR.BAD}"`)
+        , priceAwesome = !!bookitem.querySelector(`[data-pricerange="${ COLOR.AWESOME }"]`)
+        , priceOkay = !!bookitem.querySelector(`[data-pricerange="${ COLOR.OKAY }"`)
+        , priceBad = !!bookitem.querySelector(`[data-pricerange="${ COLOR.BAD }"`)
         , display = 'block'
       if (isOwned) {
         countOwned++
@@ -113,20 +113,20 @@ export default class OptionForm extends React.Component {
   render() {
     return (
       <form>
-        <label style={{color: COLOR.BAD}}>
-          <input type="checkbox" checked={this.state.show.bad} onChange={this.checkboxChangeHandler.bind(this, 'show.bad')} />显示高于最低价格的书籍({this.state.count.bad})
+        <label style={{ color: COLOR.BAD }}>
+          <input type="checkbox" checked={ this.state.show.bad } onChange={ this.checkboxChangeHandler.bind(this, 'show.bad') } />显示高于最低价格的书籍({ this.state.count.bad })
         </label>
         <br />
-        <label style={{color: COLOR.OKAY}}>
-          <input type="checkbox" checked={this.state.show.okay} onChange={this.checkboxChangeHandler.bind(this, 'show.okay')} />显示与最低价格持平的书籍({this.state.count.okay})
+        <label style={{ color: COLOR.OKAY }}>
+          <input type="checkbox" checked={ this.state.show.okay } onChange={ this.checkboxChangeHandler.bind(this, 'show.okay') } />显示与最低价格持平的书籍({this.state.count.okay})
         </label>
         <br />
-        <label style={{color: COLOR.AWESOME}}>
-          <input type="checkbox" checked={this.state.show.awesome} onChange={this.checkboxChangeHandler.bind(this, 'show.awesome')} />显示低于最低价格的书籍({this.state.count.awesome})
+        <label style={{ color: COLOR.AWESOME }}>
+          <input type="checkbox" checked={ this.state.show.awesome } onChange={ this.checkboxChangeHandler.bind(this, 'show.awesome') } />显示低于最低价格的书籍({ this.state.count.awesome })
         </label>
         <br />
         <label>
-          <input type="checkbox" checked={this.state.show.owned} onChange={this.checkboxChangeHandler.bind(this, 'show.owned')} />显示已购书籍({this.state.count.owned})
+          <input type="checkbox" checked={ this.state.show.owned } onChange={ this.checkboxChangeHandler.bind(this, 'show.owned') } />显示已购书籍({ this.state.count.owned })
         </label>
         <br />
       </form>

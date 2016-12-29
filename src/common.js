@@ -3,7 +3,7 @@
 export const NAME = 'duokan-helper'
 export const API = 'http://duokan.blackglory.me'
 export const VERSION = 'v1'
-export const BASEPATH = `${API}/${VERSION}`
+export const BASEPATH = `${ API }/${ VERSION }`
 export const KEY = Symbol(NAME)
 
 export const MDC = {
