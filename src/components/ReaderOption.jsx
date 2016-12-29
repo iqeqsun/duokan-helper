@@ -5,10 +5,6 @@ import BackgroundSelector from './BackgroundSelector.jsx'
 import FontSelector from './FontSelector.jsx'
 
 export default class ReaderOption extends React.Component {
-  constructor(props) {
-    super(props)
-  }
-
   render() {
     let fromStyle = {
       position: 'absolute'

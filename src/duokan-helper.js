@@ -359,15 +359,28 @@ function singleHandler([, id]) {
       , month = `0${ time.getMonth() + 1 }`.substr(-2)
       , day = `0${ time.getDate() }`.substr(-2)
       , info = createInfoElement(`历史最低: ¥ ${ price } (${ year }-${ month }-${ day })`)
-    parentElement.appendChild(info)
+      , historyChart = renderReactElement(<Components.HistoryChart timeline={ timeline } />)
+      , links = createElementByReact(<div><span>购买纸质版: </span></div>)
 
-    let links = createElementByReact(<div><span>购买纸质版: </span></div>)
-    parentElement.appendChild(links)
+    historyChart.style.display = 'none'
+    historyChart.addEventListener('mouseleave', () => {
+      historyChart.style.display = 'none'
+    })
+    info.appendChild(historyChart)
+
+    info.addEventListener('mouseenter', () => {
+      historyChart.style.display = 'block'
+    })
+    info.addEventListener('mouseleave', () => {
+      historyChart.style.display = 'none'
+    })
+    parentElement.appendChild(info)
 
     links.appendChild(createTaobaoLink(title))
     links.appendChild(createJDLink(title))
     links.appendChild(createAmazonLink(title))
     links.appendChild(createDangDangLink(title))
+    parentElement.appendChild(links)
 
     getBookInfoByDocumentPromise()
       .then(({title, authors, translators, rights, isbn}) => ({title, authors, translators, publisher: rights, isbn}))
