@@ -19,6 +19,7 @@
     "scripts": ["background.js"]
   , "persistent": false
   }
+, "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAjy/DRVdrlIROxLr8jADf8kOoWMCGMRNWj5xyfeA+e2b75wrWmgSC4ZdE4pP39FTJsjjzjp9f/fz719qjgkMxyBIu4Gvab7v2r+9JtqCfqeKS4clCHUi7j8Y1pykhkYHq51Ukvo0vjNWi+JaVfb+3h2nEdl5WvzshrMriAjK/97UVU51KLsicXFi1DtlATvlU9GDMIHQbN8NBQZDkNaLzt8kqe6x5SUKpmGVrwCxFUJxjx+o2CadMMCXf7rL4c5d4CtWPROPjItbbGJJ07ecPvQt5B1BaGwG7i1/oree4lbaF+EVLNC/UUBQYSFuytZZuCV2UVJRiCQtdmpZLsNIMawIDAQAB"
 , "permissions": [
     "http://*.duokan.com/"
   , "https://*.duokan.com/"
